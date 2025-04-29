@@ -1,30 +1,54 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import CustomTabBar from '../../components/CustomTabBar'; // ✨ Đúng path
-import HomeScreen from './HomeScreen';
-import TripScreen from './TripScreen';
-import OfferScreen from './OfferScreen';
-import CartScreen from './CartScreen';
-import MoreScreen from './MoreScreen';
+import { Tabs } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // ✨ Import thêm
 import React from 'react';
-
-const Tab = createBottomTabNavigator();
+import { Platform } from 'react-native';
 
 export default function HomeLayout() {
+  const insets = useSafeAreaInsets(); // ✨ Lấy khoảng cách an toàn ở dưới
+
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        tabBar={(props) => <CustomTabBar {...props} />}
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Tab.Screen name="HomeScreen" component={HomeScreen} options={{ title: 'Trang chủ' }} />
-        <Tab.Screen name="TripScreen" component={TripScreen} options={{ title: 'Chuyến đi' }} />
-        <Tab.Screen name="OfferScreen" component={OfferScreen} options={{ title: 'Ưu đãi' }} />
-        <Tab.Screen name="CartScreen" component={CartScreen} options={{ title: 'Giỏ hàng' }} />
-        <Tab.Screen name="MoreScreen" component={MoreScreen} options={{ title: 'Thêm' }} />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <Tabs
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: '#8e8e93',
+        tabBarLabelStyle: { fontSize: 12 },
+        tabBarStyle: {
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: (Platform.OS === 'ios' ? 60 : 55) + insets.bottom, // ✨ Tăng thêm safe area
+          paddingBottom: insets.bottom, // ✨ Tự cộng thêm phần safe area
+          backgroundColor: 'white',
+          borderTopWidth: 0.5,
+          borderTopColor: '#ccc',
+          paddingTop: 8,
+        },
+        headerShown: false,
+        tabBarIcon: ({ color, size }) => {
+          switch (route.name) {
+            case 'HomeScreen':
+              return <Ionicons name="home-outline" size={size} color={color} />;
+            case 'TripScreen':
+              return <Ionicons name="briefcase-outline" size={size} color={color} />;
+            case 'OfferScreen':
+              return <Ionicons name="pricetag-outline" size={size} color={color} />;
+            case 'CartScreen':
+              return <MaterialCommunityIcons name="cart-outline" size={size} color={color} />;
+            case 'MoreScreen':
+              return <Ionicons name="person-outline" size={size} color={color} />;
+            default:
+              return null;
+          }
+        },
+      })}
+    >
+      <Tabs.Screen name="HomeScreen" options={{ title: 'Trang chủ' }} />
+      <Tabs.Screen name="TripScreen" options={{ title: 'Chuyến đi' }} />
+      <Tabs.Screen name="OfferScreen" options={{ title: 'Ưu đãi' }} />
+      <Tabs.Screen name="CartScreen" options={{ title: 'Giỏ hàng' }} />
+      <Tabs.Screen name="MoreScreen" options={{ title: 'Thêm' }} />
+    </Tabs>
   );
 }
