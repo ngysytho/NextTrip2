@@ -32,7 +32,7 @@ export default function HomeLayout() {
               return <Ionicons name="home-outline" size={size} color={color} />;
             case 'TripScreen':
               return <Ionicons name="briefcase-outline" size={size} color={color} />;
-            case 'OfferScreen':
+            case 'AIScreen':
               return <Ionicons name="pricetag-outline" size={size} color={color} />;
             case 'CartScreen':
               return <MaterialCommunityIcons name="cart-outline" size={size} color={color} />;
@@ -46,7 +46,7 @@ export default function HomeLayout() {
     >
       <Tabs.Screen name="HomeScreen" options={{ title: 'Trang chủ' }} />
       <Tabs.Screen name="TripScreen" options={{ title: 'Chuyến đi' }} />
-      <Tabs.Screen name="OfferScreen" options={{ title: 'Ưu đãi' }} />
+      <Tabs.Screen name="AIScreen" options={{ title: 'Lịch Trình' }} />
       <Tabs.Screen name="CartScreen" options={{ title: 'Giỏ hàng' }} />
       <Tabs.Screen name="MoreScreen" options={{ title: 'Thêm' }} />
     </Tabs>
