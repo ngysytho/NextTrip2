@@ -46,7 +46,7 @@ export default function HomeLayout() {
     >
       <Tabs.Screen name="HomeScreen" options={{ title: 'Trang chủ' }} />
       <Tabs.Screen name="TripScreen" options={{ title: 'Chuyến đi' }} />
-      <Tabs.Screen name="AIScreen" options={{ title: 'Lịch Trình' }} />
+      <Tabs.Screen name="AIScreen" options={{ title: 'TripAI' }} />
       <Tabs.Screen name="CartScreen" options={{ title: 'Giỏ hàng' }} />
       <Tabs.Screen name="MoreScreen" options={{ title: 'Thêm' }} />
     </Tabs>
