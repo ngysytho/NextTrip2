@@ -10,11 +10,14 @@ import {
     Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'; // ✅ Dùng Expo Router
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginScreen() {
     const [phoneOrEmail, setPhoneOrEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+
+    const router = useRouter(); // ✅ Khởi tạo router
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -30,7 +33,6 @@ export default function LoginScreen({ navigation }: any) {
                         onChangeText={setPhoneOrEmail}
                         placeholder="Số điện thoại hoặc Gmail"
                         placeholderTextColor="#888"
-                        keyboardType="default"
                         style={styles.input}
                     />
 
@@ -55,7 +57,7 @@ export default function LoginScreen({ navigation }: any) {
 
                     <TouchableOpacity
                         style={styles.loginButton}
-                        onPress={() => navigation.navigate('Home')}
+                        onPress={() => alert('Đăng nhập')}
                     >
                         <Text style={styles.loginText}>Đăng nhập</Text>
                     </TouchableOpacity>
@@ -66,7 +68,7 @@ export default function LoginScreen({ navigation }: any) {
                         <Text style={styles.footerText}>Quên mật khẩu?</Text>
                     </TouchableOpacity>
                     <View style={styles.separator} />
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push('/login/signup')}>
                         <Text style={styles.footerText}>Đăng ký</Text>
                     </TouchableOpacity>
                 </View>
@@ -74,6 +76,7 @@ export default function LoginScreen({ navigation }: any) {
         </SafeAreaView>
     );
 }
+
 
 const styles = StyleSheet.create({
     safeArea: {
