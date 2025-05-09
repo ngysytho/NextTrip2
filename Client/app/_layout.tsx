@@ -8,6 +8,10 @@ export default function Layout() {
                 options={{ headerTitle: '' }}
             />
             <Stack.Screen
+                name="login/signup"
+                options={{headerTitle: ''}}
+                />
+            <Stack.Screen
                 name="home"
                 options={{ headerShown: false }}
             />
