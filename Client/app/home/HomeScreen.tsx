@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// app/home/HomeScreen.tsx
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +12,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -92,6 +96,18 @@ const newsData: News[] = [
 export default function HomeScreen() {
   const [activeTab1, setActiveTab1] = useState<TabKey1>('Khám Phá');
   const [activeTab, setActiveTab] = useState<TabKey>('Du Lịch');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkLogin = async () => {
+        const token = await AsyncStorage.getItem('access_token');
+        setIsLoggedIn(!!token);
+      };
+      checkLogin();
+    }, [])
+  );
 
   const renderItem = ({ item }: { item: Item }) => (
     <View style={styles.card}>
@@ -139,16 +155,34 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="search" size={24} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              if (!isLoggedIn) {
+                router.push('/login');
+              } else {
+                router.push('/messages/index');
+              }
+            }}
+          >
             <MaterialCommunityIcons name="facebook-messenger" size={24} color="#000" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tab1 */}
       <View style={styles.tab1Container}>
         {tab1.map((tab) => (
-          <TouchableOpacity key={tab} onPress={() => setActiveTab1(tab)} style={styles.tab1Item}>
+          <TouchableOpacity
+            key={tab}
+            onPress={() => {
+              if (tab === 'Bảng Tin' && !isLoggedIn) {
+                router.push('/login');
+              } else {
+                setActiveTab1(tab);
+              }
+            }}
+            style={styles.tab1Item}
+          >
             <Text style={[styles.tab1Text, activeTab1 === tab && styles.tab1TextActive]}>
               {tab}
             </Text>
@@ -157,7 +191,6 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* Tab con */}
       {activeTab1 === 'Khám Phá' && (
         <>
           <View style={styles.tabContainer}>
@@ -183,7 +216,7 @@ export default function HomeScreen() {
         </>
       )}
 
-      {activeTab1 === 'Bảng Tin' && (
+      {activeTab1 === 'Bảng Tin' && isLoggedIn && (
         <FlatList
           data={newsData}
           keyExtractor={(_, index) => index.toString()}

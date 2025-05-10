@@ -10,11 +10,19 @@ export default function SignupScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
     const [birthDate, setBirthDate] = useState(new Date());
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
     const handleSignUp = () => {
+        if (password !== confirmPassword) {
+            setPasswordError('Mật khẩu không khớp');
+            return;
+        }
+
+        setPasswordError('');
         console.log({ name, username, email, password, confirmPassword, birthDate });
+        // TODO: Submit to backend API
     };
 
     return (
@@ -36,10 +44,39 @@ export default function SignupScreen() {
                     <TextInput style={styles.input} placeholder="Gmail" keyboardType="email-address" value={email} onChangeText={setEmail} />
 
                     <Text style={styles.helper}>Mật khẩu</Text>
-                    <TextInput style={styles.input} placeholder="Mật khẩu" secureTextEntry value={password} onChangeText={setPassword} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Mật khẩu"
+                        secureTextEntry
+                        value={password}
+                        onChangeText={(text) => {
+                            setPassword(text);
+                            if (confirmPassword && text !== confirmPassword) {
+                                setPasswordError('Mật khẩu không khớp');
+                            } else {
+                                setPasswordError('');
+                            }
+                        }}
+                    />
 
                     <Text style={styles.helper}>Nhập lại mật khẩu</Text>
-                    <TextInput style={styles.input} placeholder="Nhập lại mật khẩu" secureTextEntry value={confirmPassword} onChangeText={setConfirmPassword} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Nhập lại mật khẩu"
+                        secureTextEntry
+                        value={confirmPassword}
+                        onChangeText={(text) => {
+                            setConfirmPassword(text);
+                            if (password && text !== password) {
+                                setPasswordError('Mật khẩu không khớp');
+                            } else {
+                                setPasswordError('');
+                            }
+                        }}
+                    />
+                    {passwordError !== '' && (
+                        <Text style={styles.errorText}>{passwordError}</Text>
+                    )}
 
                     <Text style={styles.helper}>Ngày sinh</Text>
                     <TouchableOpacity onPress={() => setDatePickerVisibility(true)} style={styles.input}>
@@ -71,4 +108,5 @@ const styles = StyleSheet.create({
         shadowRadius: 5, elevation: 4, marginTop: 24,
     },
     buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    errorText: { color: 'red', fontSize: 14, marginLeft: 4, marginTop: 4 },
 });

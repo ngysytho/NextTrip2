@@ -8,16 +8,31 @@ import {
     SafeAreaView,
     KeyboardAvoidingView,
     Platform,
+    Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // ✅ Dùng Expo Router
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
     const [phoneOrEmail, setPhoneOrEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    const router = useRouter(); // ✅ Khởi tạo router
+    const router = useRouter();
+
+    const handleLogin = async () => {
+        if (!phoneOrEmail || !password) {
+            Alert.alert('Thông báo', 'Vui lòng nhập đầy đủ thông tin');
+            return;
+        }
+
+        // ✅ Giả lập đăng nhập thành công
+        await AsyncStorage.setItem('access_token', 'user-token-demo');
+
+        // ✅ Chuyển về trang chủ (replace để không quay lại login nữa)
+        router.replace('/');
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -57,7 +72,7 @@ export default function LoginScreen() {
 
                     <TouchableOpacity
                         style={styles.loginButton}
-                        onPress={() => alert('Đăng nhập')}
+                        onPress={handleLogin}
                     >
                         <Text style={styles.loginText}>Đăng nhập</Text>
                     </TouchableOpacity>
@@ -76,7 +91,6 @@ export default function LoginScreen() {
         </SafeAreaView>
     );
 }
-
 
 const styles = StyleSheet.create({
     safeArea: {
