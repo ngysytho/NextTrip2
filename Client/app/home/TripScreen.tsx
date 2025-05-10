@@ -1,37 +1,63 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const tabs = ['Chuyến Đi', 'Lịch sử', 'Đơn nháp'] as const;
 type TabKey = typeof tabs[number];
 
 export default function TripScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>('Lịch sử');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
-  const renderContent = () => {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContent}>
-          <Image
-            source={require('../../assets/images/NextTripLogo.png')}
-            style={styles.image}
-            resizeMode="contain"
-          />
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem('access_token');
+      setIsLoggedIn(!!token);
+    };
+    checkLogin();
+  }, []);
+
+  const handleTabPress = (tab: TabKey) => {
+    if ((tab === 'Lịch sử' || tab === 'Đơn nháp') && !isLoggedIn) {
+      router.push('/login');
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
+  const renderContent = () => (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.centerContent}>
+        <Image
+          source={require('../../assets/images/NextTripLogo.png')}
+          style={styles.image}
+          resizeMode="contain"
+        />
+        <TouchableOpacity onPress={() => router.push('/login')}>
           <View style={styles.loginPrompt}>
             <Ionicons name="person-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
             <Text style={styles.promptText}>Vui lòng đăng nhập để tiếp tục</Text>
           </View>
-        </View>
-      </SafeAreaView>
-    );
-  };
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Tab Header */}
       <View style={styles.tabHeader}>
         {tabs.map((tab) => (
-          <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tabItem}>
+          <TouchableOpacity key={tab} onPress={() => handleTabPress(tab)} style={styles.tabItem}>
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
               {tab}
             </Text>
@@ -40,7 +66,6 @@ export default function TripScreen() {
         ))}
       </View>
 
-      {/* Content */}
       {renderContent()}
     </SafeAreaView>
   );

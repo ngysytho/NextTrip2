@@ -9,8 +9,16 @@ export default function Layout() {
             />
             <Stack.Screen
                 name="login/signup"
-                options={{headerTitle: ''}}
-                />
+                options={{ headerTitle: '' }}
+            />
+            <Stack.Screen
+                name="messages/index"
+                options={{ headerTitle: 'Tin Nhắn' }}
+            />
+            <Stack.Screen
+                name="messages/[id]"
+                options={{ headerTitle: '' }}
+            />
             <Stack.Screen
                 name="home"
                 options={{ headerShown: false }}
