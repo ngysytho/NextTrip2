@@ -1,17 +1,41 @@
 {
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.3.0",
     "@react-navigation/native": "^7.1.8",
     "@react-navigation/native-stack": "^7.3.12",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
     "expo": "^53.0.0",
     "expo-router": "~5.0.5",
+    "express": "^5.1.0",
+    "mongoose": "^8.14.3",
+    "nodemailer": "^7.0.3",
     "react": "19.0.0",
     "react-native": "0.79.2",
-    "@react-native-async-storage/async-storage": "2.1.2"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/react": "~19.0.10",
     "typescript": "~5.8.3"
-  }
+  },
+  "name": "nexttrip2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ngysytho/NextTrip2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ngysytho/NextTrip2/issues"
+  },
+  "homepage": "https://github.com/ngysytho/NextTrip2#readme",
+  "description": ""
 }
