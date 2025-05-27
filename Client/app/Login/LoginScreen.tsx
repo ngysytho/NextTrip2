@@ -18,6 +18,7 @@ export default function LoginScreen() {
     const [phoneOrEmail, setPhoneOrEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const router = useRouter();
 
@@ -27,13 +28,33 @@ export default function LoginScreen() {
             return;
         }
 
-        // ✅ Giả lập đăng nhập thành công
-        await AsyncStorage.setItem('access_token', 'user-token-demo');
+        setLoading(true);
 
-        // ✅ Chuyển về trang chủ (replace để không quay lại login nữa)
-        router.replace('/');
+        try {
+            const response = await fetch('http://172.20.10.7:8080/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email_user: phoneOrEmail,
+                    password_user: password,
+                }),
+            });
+
+            const text = await response.text();
+            if (response.ok) {
+                await AsyncStorage.setItem('access_token', text); // giả sử backend trả token
+                Alert.alert('Thành công', 'Đăng nhập thành công');
+                router.replace('/');
+            } else {
+                Alert.alert('Lỗi đăng nhập', text);
+            }
+        } catch (err) {
+            console.error('❌ Lỗi mạng:', err);
+            Alert.alert('Lỗi', 'Không thể kết nối đến server');
+        } finally {
+            setLoading(false);
+        }
     };
-
     return (
         <SafeAreaView style={styles.safeArea}>
             <KeyboardAvoidingView

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView,
-    ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator
+    ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Modal
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,31 @@ export default function SignupScreen() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const [showVerifyInput, setShowVerifyInput] = useState(false);
+    const [verificationCode, setVerificationCode] = useState('');
+    const [countdown, setCountdown] = useState(60);
+    const [canResend, setCanResend] = useState(false);
+
+    useEffect(() => {
+        let timer: ReturnType<typeof setInterval>;
+        if (showVerifyInput) {
+            setCountdown(60);
+            setCanResend(false);
+            timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        setCanResend(true);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+
+        return () => clearInterval(timer);
+    }, [showVerifyInput]);
 
     const handleSignUp = async () => {
         const today = new Date();
@@ -49,20 +74,20 @@ export default function SignupScreen() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name,
-                    username,
-                    email,
-                    password,
-                    birthDate: birthDate.toISOString(),
+                    email_user: email,
+                    username_user: username,
+                    password_user: password,
+                    displayName_user: name,
+                    birth_date: birthDate.toISOString(),
                 }),
             });
 
-            const text = await response.text(); // dùng .text() thay vì .json() để tránh lỗi parse khi backend trả về chuỗi
+            const text = await response.text();
             console.log('📦 RESPONSE:', response.status, text);
 
             if (response.ok) {
-                alert('Đăng ký thành công!');
-                router.replace('/');
+                alert('Đăng ký thành công! Mã xác nhận đã gửi về email.');
+                setShowVerifyInput(true);
             } else {
                 alert(`Lỗi: ${text}`);
             }
@@ -74,6 +99,61 @@ export default function SignupScreen() {
         }
     };
 
+    const handleVerifyCode = async () => {
+        if (!verificationCode) {
+            alert('Vui lòng nhập mã xác nhận');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch('http://172.20.10.7:8080/api/users/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    code: verificationCode,
+                }),
+            });
+
+            const text = await response.text();
+            console.log('✅ VERIFY RESPONSE:', response.status, text);
+
+            if (response.ok) {
+                alert('Xác minh tài khoản thành công!');
+                setShowVerifyInput(false);
+                router.replace('/');
+            } else {
+                alert(`Lỗi xác minh: ${text}`);
+            }
+        } catch (err) {
+            console.error('❌ VERIFY ERROR:', err);
+            alert('Lỗi kết nối khi xác minh.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`http://172.20.10.7:8080/api/users/send-verification?email=${email}`);
+            const text = await response.text();
+            console.log('🔁 RESEND RESPONSE:', response.status, text);
+            if (response.ok) {
+                alert('Đã gửi lại mã xác nhận!');
+                setCountdown(60);
+                setCanResend(false);
+            } else {
+                alert('Gửi lại thất bại: ' + text);
+            }
+        } catch (err) {
+            alert('Không gửi lại được mã xác nhận');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6f8' }}>
@@ -140,6 +220,40 @@ export default function SignupScreen() {
                     </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {/* Modal xác minh */}
+            <Modal visible={showVerifyInput} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Xác minh Email</Text>
+                        <Text style={styles.label}>Nhập mã xác nhận đã gửi tới email</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={verificationCode}
+                            onChangeText={setVerificationCode}
+                            placeholder="Mã xác nhận"
+                            keyboardType="number-pad"
+                        />
+                        <TouchableOpacity onPress={handleVerifyCode} style={styles.button} disabled={loading}>
+                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Xác minh</Text>}
+                        </TouchableOpacity>
+
+                        {canResend ? (
+                            <TouchableOpacity onPress={handleResendCode} style={{ marginTop: 12 }}>
+                                <Text style={{ color: '#007AFF', textAlign: 'center' }}>Gửi lại mã xác nhận</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <Text style={{ marginTop: 12, textAlign: 'center', color: '#999' }}>
+                                Bạn có thể gửi lại sau {countdown}s
+                            </Text>
+                        )}
+
+                        <TouchableOpacity onPress={() => setShowVerifyInput(false)} style={styles.cancelButton}>
+                            <Text style={styles.cancelButtonText}>Huỷ</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -161,4 +275,33 @@ const styles = StyleSheet.create({
         alignItems: 'center', marginTop: 24,
     },
     buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        padding: 24,
+        borderRadius: 16,
+        width: '80%',
+        elevation: 10,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textAlign: 'center',
+        color: '#333',
+    },
+    cancelButton: {
+        marginTop: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        color: '#007AFF',
+        fontSize: 14,
+    },
 });

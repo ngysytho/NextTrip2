@@ -9,6 +9,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     @Query("{ 'email_user': ?0 }")
     Boolean existsByEmail_user(String email_user);
+    
+    @Query("{ 'email_user': ?0 }")
+    User findByEmail_user(String email_user);
+
 
     @Query("{ 'username_user': ?0 }")
     Boolean existsByUsername_user(String username_user);
