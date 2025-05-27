@@ -13,7 +13,7 @@ public class User {
     @Id
     private String id;
 
-    private final String userId = UUID.randomUUID().toString();
+    private String userId = UUID.randomUUID().toString();
 
     @Field("email_user")
     private String email_user;
@@ -34,12 +34,12 @@ public class User {
     private String verifyToken_user;
 
     @Field("isActive_user")
-    private boolean isActive_user = false;
+    private Boolean isActive_user = false; // ✅ dùng Boolean thay vì boolean
 
     @Field("createdAt_user")
-    private final Date createdAt_user = new Date();
+    private Date createdAt_user = new Date();
 
-    // Getters và Setters
+    // ======== Getters và Setters ========
 
     public String getId() {
         return id;
@@ -47,6 +47,10 @@ public class User {
 
     public String getUserId() {
         return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getEmail_user() {
@@ -97,15 +101,19 @@ public class User {
         this.verifyToken_user = verifyToken_user;
     }
 
-    public boolean isIsActive_user() {
+    public Boolean getIsActive_user() {
         return isActive_user;
     }
 
-    public void setIsActive_user(boolean isActive_user) {
+    public void setIsActive_user(Boolean isActive_user) {
         this.isActive_user = isActive_user;
     }
 
     public Date getCreatedAt_user() {
         return createdAt_user;
+    }
+
+    public void setCreatedAt_user(Date createdAt_user) {
+        this.createdAt_user = createdAt_user;
     }
 }
