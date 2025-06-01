@@ -9,6 +9,7 @@ import {
     SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAppTheme } from '../../context/ThemeContext'; // ✅ Dark Mode Context
 
 const messages = [
     {
@@ -29,10 +30,12 @@ const messages = [
 
 export default function MessageScreen() {
     const router = useRouter();
+    const { theme } = useAppTheme();
+    const isDark = theme === 'dark';
 
     const renderItem = ({ item }: { item: typeof messages[0] }) => (
         <TouchableOpacity
-            style={styles.item}
+            style={[styles.item, { borderColor: isDark ? '#333' : '#ddd' }]}
             onPress={() =>
                 router.push({
                     pathname: '/messages/[id]',
@@ -46,16 +49,20 @@ export default function MessageScreen() {
         >
             <Image source={{ uri: item.avatar }} style={styles.avatar} />
             <View style={styles.textContainer}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.message} numberOfLines={1}>{item.message}</Text>
+                <Text style={[styles.name, { color: isDark ? '#fff' : '#000' }]}>{item.name}</Text>
+                <Text style={[styles.message, { color: isDark ? '#aaa' : '#555' }]} numberOfLines={1}>
+                    {item.message}
+                </Text>
             </View>
-            <Text style={styles.time}>{item.time}</Text>
+            <Text style={[styles.time, { color: isDark ? '#888' : '#888' }]}>{item.time}</Text>
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.header}>Messages</Text>
+        <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+            <Text style={[styles.header, { color: isDark ? '#fff' : '#000', backgroundColor: isDark ? '#000' : '#fff' }]}>
+                Messages
+            </Text>
             <FlatList
                 data={messages}
                 keyExtractor={(item) => item.id}
@@ -66,20 +73,17 @@ export default function MessageScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#000' },
+    container: { flex: 1 },
     header: {
         fontSize: 20,
         fontWeight: 'bold',
         padding: 16,
-        color: '#fff',
-        backgroundColor: '#000',
     },
     item: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
         borderBottomWidth: 0.3,
-        borderColor: '#333',
     },
     avatar: {
         width: 48,
@@ -88,7 +92,15 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     textContainer: { flex: 1 },
-    name: { color: '#fff', fontWeight: '600', fontSize: 16 },
-    message: { color: '#aaa', marginTop: 2 },
-    time: { color: '#888', fontSize: 12 },
+    name: {
+        fontWeight: '600',
+        fontSize: 16,
+    },
+    message: {
+        marginTop: 2,
+    },
+    time: {
+        fontSize: 12,
+        marginLeft: 8,
+    },
 });

@@ -1,4 +1,3 @@
-// app/home/HomeScreen.tsx
 import React, { useState, useCallback } from 'react';
 import {
   View,
@@ -15,6 +14,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icon
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAppTheme } from '../../context/ThemeContext'; // ✅ Thêm dòng này
 
 const { width } = Dimensions.get('window');
 
@@ -99,6 +99,9 @@ export default function HomeScreen() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
+  const { theme } = useAppTheme();
+  const isDark = theme === 'dark';
+
   useFocusEffect(
     useCallback(() => {
       const checkLogin = async () => {
@@ -110,50 +113,54 @@ export default function HomeScreen() {
   );
 
   const renderItem = ({ item }: { item: Item }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: isDark ? '#111' : '#fff' }]}>
       <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
-      <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
-      <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+      <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#000' }]} numberOfLines={1}>
+        {item.name}
+      </Text>
+      <Text style={[styles.cardDesc, { color: isDark ? '#aaa' : '#444' }]} numberOfLines={2}>
+        {item.description}
+      </Text>
     </View>
   );
 
   const renderNewsItem = ({ item }: { item: News }) => (
-    <View style={styles.newsCard}>
+    <View style={[styles.newsCard, { backgroundColor: isDark ? '#111' : '#fff' }]}>
       <View style={styles.newsHeader}>
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
         <View>
-          <Text style={styles.posterName}>{item.name}</Text>
-          <Text style={styles.postTime}>{item.time}</Text>
+          <Text style={[styles.posterName, { color: isDark ? '#fff' : '#000' }]}>{item.name}</Text>
+          <Text style={[styles.postTime, { color: isDark ? '#aaa' : '#666' }]}>{item.time}</Text>
         </View>
       </View>
-      <Text style={styles.newsContent}>{item.content}</Text>
+      <Text style={[styles.newsContent, { color: isDark ? '#eee' : '#000' }]}>{item.content}</Text>
       <Image source={{ uri: item.image }} style={styles.newsImage} />
       <View style={styles.newsActions}>
         <TouchableOpacity style={styles.actionBtn}>
-          <FontAwesome name="thumbs-o-up" size={20} color="#555" />
-          <Text style={styles.actionText}>Like</Text>
+          <FontAwesome name="thumbs-o-up" size={20} color={isDark ? '#ccc' : '#555'} />
+          <Text style={[styles.actionText, { color: isDark ? '#ccc' : '#555' }]}>Like</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn}>
-          <Ionicons name="chatbubble-outline" size={20} color="#555" />
-          <Text style={styles.actionText}>Comment</Text>
+          <Ionicons name="chatbubble-outline" size={20} color={isDark ? '#ccc' : '#555'} />
+          <Text style={[styles.actionText, { color: isDark ? '#ccc' : '#555' }]}>Comment</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn}>
-          <Ionicons name="arrow-redo-outline" size={20} color="#555" />
-          <Text style={styles.actionText}>Share</Text>
+          <Ionicons name="arrow-redo-outline" size={20} color={isDark ? '#ccc' : '#555'} />
+          <Text style={[styles.actionText, { color: isDark ? '#ccc' : '#555' }]}>Share</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={isDark ? '#000' : '#fff'} />
 
-      <View style={styles.header}>
-        <Text style={styles.logo}>NextTrip</Text>
+      <View style={[styles.header, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+        <Text style={[styles.logo, { color: isDark ? '#fff' : '#000' }]}>NextTrip</Text>
         <View style={styles.actions}>
           <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="search" size={24} color="#000" />
+            <Ionicons name="search" size={24} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconButton}
@@ -165,12 +172,12 @@ export default function HomeScreen() {
               }
             }}
           >
-            <MaterialCommunityIcons name="facebook-messenger" size={24} color="#000" />
+            <MaterialCommunityIcons name="facebook-messenger" size={24} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.tab1Container}>
+      <View style={[styles.tab1Container, { backgroundColor: isDark ? '#111' : '#f5f5f5' }]}>
         {tab1.map((tab) => (
           <TouchableOpacity
             key={tab}
@@ -183,7 +190,7 @@ export default function HomeScreen() {
             }}
             style={styles.tab1Item}
           >
-            <Text style={[styles.tab1Text, activeTab1 === tab && styles.tab1TextActive]}>
+            <Text style={[styles.tab1Text, { color: isDark ? '#fff' : '#000' }, activeTab1 === tab && styles.tab1TextActive]}>
               {tab}
             </Text>
             {activeTab1 === tab && <View style={styles.tab1Underline} />}
@@ -193,7 +200,7 @@ export default function HomeScreen() {
 
       {activeTab1 === 'Khám Phá' && (
         <>
-          <View style={styles.tabContainer}>
+          <View style={[styles.tabContainer, { backgroundColor: isDark ? '#111' : 'black' }]}>
             {tabs.map((tab) => (
               <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tabItem}>
                 <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
@@ -221,7 +228,7 @@ export default function HomeScreen() {
           data={newsData}
           keyExtractor={(_, index) => index.toString()}
           renderItem={renderNewsItem}
-          contentContainerStyle={{ padding: 12 }}
+          contentContainerStyle={{ padding: 12, backgroundColor: isDark ? '#000' : '#fff' }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -230,26 +237,26 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', paddingHorizontal: 16,
-    paddingTop: 12, paddingBottom: 8, backgroundColor: '#fff',
+    paddingTop: 12, paddingBottom: 8,
   },
-  logo: { fontSize: 28, fontWeight: 'bold', color: '#000' },
+  logo: { fontSize: 28, fontWeight: 'bold' },
   actions: { flexDirection: 'row', alignItems: 'center' },
   iconButton: { marginLeft: 16 },
   tab1Container: {
     flexDirection: 'row', justifyContent: 'space-around',
-    backgroundColor: '#f5f5f5', paddingVertical: 10,
+    paddingVertical: 10,
   },
   tab1Item: { alignItems: 'center' },
-  tab1Text: { color: '#000', fontSize: 16, fontWeight: '500' },
+  tab1Text: { fontSize: 16, fontWeight: '500' },
   tab1TextActive: { fontWeight: 'bold', color: 'blue' },
   tab1Underline: { marginTop: 4, width: 24, height: 3, backgroundColor: 'blue', borderRadius: 2 },
   tabContainer: {
     flexDirection: 'row', justifyContent: 'space-around',
-    backgroundColor: 'black', paddingVertical: 10,
+    paddingVertical: 10,
   },
   tabItem: { alignItems: 'center' },
   tabText: { color: '#fff', fontSize: 16, fontWeight: '500' },
@@ -257,20 +264,20 @@ const styles = StyleSheet.create({
   tabUnderline: { marginTop: 4, width: 24, height: 3, backgroundColor: '#fff', borderRadius: 2 },
   gridContent: { paddingHorizontal: 8, paddingTop: 12 },
   card: {
-    backgroundColor: '#fff', marginBottom: 12, borderRadius: 8,
+    marginBottom: 12, borderRadius: 8,
     overflow: 'hidden', width: width / 2 - 16, elevation: 2,
   },
   cardImage: { width: '100%', height: 120 },
   cardTitle: { fontSize: 14, fontWeight: 'bold', marginTop: 8, marginHorizontal: 8 },
-  cardDesc: { fontSize: 12, color: '#444', marginHorizontal: 8, marginBottom: 8 },
+  cardDesc: { fontSize: 12, marginHorizontal: 8, marginBottom: 8 },
   newsCard: {
-    backgroundColor: '#fff', marginBottom: 16,
+    marginBottom: 16,
     borderRadius: 10, padding: 12, elevation: 2,
   },
   newsHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   posterName: { fontWeight: 'bold', fontSize: 14 },
-  postTime: { fontSize: 12, color: '#666' },
+  postTime: { fontSize: 12 },
   newsContent: { fontSize: 14, marginBottom: 8 },
   newsImage: { width: '100%', height: 180, borderRadius: 8, marginBottom: 8 },
   newsActions: {
@@ -278,5 +285,5 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
   },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  actionText: { fontSize: 13, color: '#555', marginLeft: 4 },
+  actionText: { fontSize: 13 },
 });

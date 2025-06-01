@@ -10,10 +10,14 @@
     "expo": "^53.0.0",
     "expo-router": "~5.0.5",
     "express": "^5.1.0",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.1.0",
     "mongoose": "^8.14.3",
     "nodemailer": "^7.0.3",
     "react": "19.0.0",
+    "react-i18next": "^15.5.2",
     "react-native": "0.79.2",
+    "react-native-appearance": "^0.3.4",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
