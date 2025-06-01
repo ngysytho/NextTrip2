@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppTheme } from '../../context/ThemeContext'; // ✅ THÊM
 
 const tabs = ['Chuyến Đi', 'Lịch sử', 'Đơn nháp'] as const;
 type TabKey = typeof tabs[number];
@@ -18,6 +19,9 @@ export default function TripScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>('Lịch sử');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
+
+  const { theme } = useAppTheme(); // ✅ LẤY THEME
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -36,7 +40,7 @@ export default function TripScreen() {
   };
 
   const renderContent = () => (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#e5e5e5' }]}>
       <View style={styles.centerContent}>
         <Image
           source={require('../../assets/images/NextTripLogo.png')}
@@ -44,7 +48,7 @@ export default function TripScreen() {
           resizeMode="contain"
         />
         <TouchableOpacity onPress={() => router.push('/login')}>
-          <View style={styles.loginPrompt}>
+          <View style={[styles.loginPrompt, { backgroundColor: isDark ? '#222' : '#000' }]}>
             <Ionicons name="person-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
             <Text style={styles.promptText}>Vui lòng đăng nhập để tiếp tục</Text>
           </View>
@@ -54,11 +58,15 @@ export default function TripScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.tabHeader}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#e5e5e5' }]}>
+      <View style={[styles.tabHeader, { backgroundColor: isDark ? '#111' : '#000' }]}>
         {tabs.map((tab) => (
           <TouchableOpacity key={tab} onPress={() => handleTabPress(tab)} style={styles.tabItem}>
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+            <Text style={[
+              styles.tabText,
+              { color: isDark ? '#fff' : '#fff' },
+              activeTab === tab && styles.tabTextActive
+            ]}>
               {tab}
             </Text>
             {activeTab === tab && <View style={styles.tabIndicator} />}
@@ -72,16 +80,15 @@ export default function TripScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#e5e5e5' },
+  container: { flex: 1 },
   tabHeader: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: 'black',
     paddingTop: 12,
     paddingBottom: 6,
   },
   tabItem: { alignItems: 'center' },
-  tabText: { color: '#fff', fontSize: 16, fontWeight: '500' },
+  tabText: { fontSize: 16, fontWeight: '500' },
   tabTextActive: { fontWeight: 'bold', fontSize: 18 },
   tabIndicator: {
     marginTop: 4,
@@ -98,7 +105,6 @@ const styles = StyleSheet.create({
   image: { width: 160, height: 160, marginBottom: 20 },
   loginPrompt: {
     flexDirection: 'row',
-    backgroundColor: 'black',
     borderRadius: 30,
     paddingVertical: 8,
     paddingHorizontal: 16,

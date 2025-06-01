@@ -1,11 +1,14 @@
 import { Tabs } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; // ✨ Import thêm
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { Platform } from 'react-native';
+import { useAppTheme } from '../../context/ThemeContext'; // ✅ Import
 
 export default function HomeLayout() {
-  const insets = useSafeAreaInsets(); // ✨ Lấy khoảng cách an toàn ở dưới
+  const insets = useSafeAreaInsets();
+  const { theme } = useAppTheme();
+  const isDark = theme === 'dark';
 
   return (
     <Tabs
@@ -18,11 +21,11 @@ export default function HomeLayout() {
           left: 0,
           right: 0,
           bottom: 0,
-          height: (Platform.OS === 'ios' ? 60 : 55) + insets.bottom, // ✨ Tăng thêm safe area
-          paddingBottom: insets.bottom, // ✨ Tự cộng thêm phần safe area
-          backgroundColor: 'white',
+          height: (Platform.OS === 'ios' ? 60 : 55) + insets.bottom,
+          paddingBottom: insets.bottom,
+          backgroundColor: isDark ? '#000' : '#fff', // ✅ đổi theo dark/light
           borderTopWidth: 0.5,
-          borderTopColor: '#ccc',
+          borderTopColor: isDark ? '#444' : '#ccc',
           paddingTop: 8,
         },
         headerShown: false,

@@ -7,11 +7,17 @@ import {
     StyleSheet,
     SafeAreaView,
 } from 'react-native';
+import { useAppTheme } from '../../context/ThemeContext'; // ✅ THÊM
 
 export default function CartScreen() {
+    const { theme } = useAppTheme(); // ✅ LẤY THEME
+    const isDark = theme === 'dark';
+
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.header}>Xe đẩy hàng (0 mục)</Text>
+        <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+            <Text style={[styles.header, { color: isDark ? '#fff' : '#000' }]}>
+                Xe đẩy hàng (0 mục)
+            </Text>
 
             <View style={styles.content}>
                 <Image
@@ -19,8 +25,10 @@ export default function CartScreen() {
                     style={styles.image}
                     resizeMode="contain"
                 />
-                <Text style={styles.title}>Giỏ hàng của quý khách chẳng có gì bên trong</Text>
-                <Text style={styles.subtitle}>
+                <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>
+                    Giỏ hàng của quý khách chẳng có gì bên trong
+                </Text>
+                <Text style={[styles.subtitle, { color: isDark ? '#aaa' : '#666' }]}>
                     Hãy mua khách sạn, quán ăn và điểm thu hút để lập kế hoạch cho chuyến của bạn
                 </Text>
 
@@ -33,7 +41,7 @@ export default function CartScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1 },
     header: {
         textAlign: 'center',
         fontSize: 18,
@@ -59,7 +67,6 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         textAlign: 'center',
-        color: '#666',
         fontSize: 14,
         marginBottom: 24,
     },

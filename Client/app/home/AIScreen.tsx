@@ -12,11 +12,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useAppTheme } from '../../context/ThemeContext'; // ✅ THÊM DÒNG NÀY
 
 export default function AIScreen() {
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState<string[]>([]);
   const tabBarHeight = useBottomTabBarHeight();
+
+  const { theme } = useAppTheme(); // ✅ LẤY THEME
+  const isDark = theme === 'dark';
 
   const send = () => {
     if (!inputText.trim()) return;
@@ -25,10 +29,10 @@ export default function AIScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>TripChat</Text>
+      <View style={[styles.header, { backgroundColor: isDark ? '#111' : '#fff' }]}>
+        <Text style={[styles.headerText, { color: isDark ? '#fff' : '#000' }]}>TripChat</Text>
       </View>
 
       {/* Messages */}
@@ -36,8 +40,8 @@ export default function AIScreen() {
         data={messages}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={styles.messageBubble}>
-            <Text style={styles.messageText}>{item}</Text>
+          <View style={[styles.messageBubble, { backgroundColor: isDark ? '#333' : '#e6e6e6' }]}>
+            <Text style={[styles.messageText, { color: isDark ? '#fff' : '#000' }]}>{item}</Text>
           </View>
         )}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
@@ -50,13 +54,19 @@ export default function AIScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={tabBarHeight + 10}
       >
-        <View style={[styles.inputWrap, { marginBottom: tabBarHeight }]}>
+        <View style={[styles.inputWrap, { backgroundColor: isDark ? '#111' : '#fff', marginBottom: tabBarHeight }]}>
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDark ? '#222' : '#f2f2f2',
+                color: isDark ? '#fff' : '#000',
+              },
+            ]}
             placeholder="Ask something..."
-            placeholderTextColor="#555"
+            placeholderTextColor={isDark ? '#aaa' : '#555'}
           />
           <TouchableOpacity onPress={send} style={styles.sendBtn}>
             <Ionicons name="send" size={20} color="#fff" />
@@ -68,17 +78,15 @@ export default function AIScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
   },
-  headerText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
+  headerText: { fontSize: 18, fontWeight: 'bold' },
   messageBubble: {
-    backgroundColor: '#e6e6e6',
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
@@ -86,14 +94,12 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   messageText: {
-    color: '#000',
     fontSize: 14,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#fff',
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -101,11 +107,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    color: '#000',
     fontSize: 14,
   },
   sendBtn: {
