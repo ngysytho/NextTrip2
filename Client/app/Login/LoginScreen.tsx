@@ -34,7 +34,7 @@ export default function LoginScreen() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://172.20.10.7:8080/api/users/login', {
+            const response = await fetch('http://192.168.0.119:8080/api/users/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -42,6 +42,7 @@ export default function LoginScreen() {
                     password_user: password,
                 }),
             });
+            
 
             const text = await response.text();
             if (response.ok) {
@@ -114,7 +115,7 @@ export default function LoginScreen() {
                         <Text style={[styles.footerText, { color: '#007AFF' }]}>Quên mật khẩu?</Text>
                     </TouchableOpacity>
                     <View style={styles.separator} />
-                    <TouchableOpacity onPress={() => router.push('/login/signup')}>
+                    <TouchableOpacity onPress={() => router.push('/Login/signup')}>
                         <Text style={[styles.footerText, { color: '#007AFF' }]}>Đăng ký</Text>
                     </TouchableOpacity>
                 </View>

@@ -12,6 +12,7 @@ import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.service.EmailService;
 import com.nexttrip2.server.service.UserService;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

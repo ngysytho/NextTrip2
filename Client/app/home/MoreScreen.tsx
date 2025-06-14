@@ -13,23 +13,16 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppTheme } from '../../context/ThemeContext';
 
-const menuItems = [
-  { icon: 'pricetag-outline', label: 'Ví' },
-  { icon: 'card-outline', label: 'Payment' },
-  { icon: 'time-outline', label: 'Lịch sử đơn hàng' },
-  { icon: 'gift-outline', label: 'Reward Credits' },
-  { icon: 'storefront-outline', label: 'Ứng dụng cho chủ quán' },
-  { icon: 'person-add-outline', label: 'Mời bạn bè' },
-  { icon: 'mail-outline', label: 'Góp ý' },
-  { icon: 'help-circle-outline', label: 'Chính sách quy định' },
-  { icon: 'settings-outline', label: 'Cài đặt' },
-];
+type MenuItem = {
+  icon: string;
+  label: string;
+  isLogout?: boolean;
+};
 
 export default function MoreScreen() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const router = useRouter();
-
   const { theme, mode, setMode } = useAppTheme();
   const isDark = theme === 'dark';
 
@@ -50,13 +43,59 @@ export default function MoreScreen() {
     Alert.alert('Đăng xuất thành công');
   };
 
-  const renderItem = ({ item }: any) => (
-    <TouchableOpacity style={[styles.item, { backgroundColor: isDark ? '#111' : '#fff' }]}>
+  const getMenuItems = (): MenuItem[] => {
+    const items: MenuItem[] = [
+      { icon: 'pricetag-outline', label: 'Ví' },
+      { icon: 'card-outline', label: 'Payment' },
+      { icon: 'time-outline', label: 'Lịch sử đơn hàng' },
+      { icon: 'gift-outline', label: 'Reward Credits' },
+      { icon: 'storefront-outline', label: 'Ứng dụng cho chủ quán' },
+      { icon: 'person-add-outline', label: 'Mời bạn bè' },
+      { icon: 'mail-outline', label: 'Góp ý' },
+      { icon: 'help-circle-outline', label: 'Chính sách quy định' },
+      { icon: 'settings-outline', label: 'Cài đặt' },
+    ];
+    if (isLoggedIn) {
+      items.push({ icon: 'log-out-outline', label: 'Đăng xuất', isLogout: true });
+    }
+    return items;
+  };
+
+  const renderItem = ({ item }: { item: MenuItem }) => (
+    <TouchableOpacity
+      onPress={() => {
+        if (item.isLogout) return handleLogout();
+        // You can handle other actions based on label here
+      }}
+      style={[
+        styles.item,
+        { backgroundColor: isDark ? '#111' : '#fff' },
+      ]}
+    >
       <View style={styles.itemLeft}>
-        <Ionicons name={item.icon} size={24} color="#007AFF" />
-        <Text style={[styles.itemLabel, { color: isDark ? '#eee' : '#000' }]}>{item.label}</Text>
+        <Ionicons
+          name={item.icon as any}
+          size={24}
+          color={item.isLogout ? '#FF3B30' : '#007AFF'}
+        />
+        <Text
+          style={[
+            styles.itemLabel,
+            {
+              color: item.isLogout
+                ? '#FF3B30'
+                : isDark
+                ? '#eee'
+                : '#000',
+            },
+          ]}
+        >
+          {item.label}
+        </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={isDark ? '#888' : '#ccc'} />
+      {!item.isLogout && (
+        <Ionicons name="chevron-forward" size={20} color={isDark ? '#888' : '#ccc'} />
+      )}
     </TouchableOpacity>
   );
 
@@ -66,7 +105,7 @@ export default function MoreScreen() {
         style={[styles.header, { backgroundColor: isDark ? '#222' : '#000' }]}
         onPress={() => {
           if (!isLoggedIn) {
-            router.push('/login');
+            router.push('/Login');
           }
         }}
       >
@@ -78,7 +117,7 @@ export default function MoreScreen() {
       </TouchableOpacity>
 
       <FlatList
-        data={menuItems}
+        data={getMenuItems()}
         keyExtractor={(item) => item.label}
         renderItem={renderItem}
         ItemSeparatorComponent={() => (
@@ -115,15 +154,6 @@ export default function MoreScreen() {
         }
       />
 
-      {/* Đăng xuất và phiên bản */}
-      {isLoggedIn && (
-        <TouchableOpacity
-          style={[styles.logoutButton, { backgroundColor: isDark ? '#111' : '#fff' }]}
-          onPress={handleLogout}
-        >
-          <Text style={[styles.logoutText, { color: '#FF3B30' }]}>Đăng xuất</Text>
-        </TouchableOpacity>
-      )}
       <Text style={[styles.version, { color: isDark ? '#aaa' : '#888' }]}>
         Phiên bản 1.1.0
       </Text>
@@ -162,16 +192,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 8,
-  },
-  logoutButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   version: {
     textAlign: 'center',
