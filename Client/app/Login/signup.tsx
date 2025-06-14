@@ -74,7 +74,7 @@ export default function SignupScreen() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://172.20.10.7:8080/api/users/register', {
+            const response = await fetch('http://192.168.0.119:8080/api/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -136,7 +136,7 @@ export default function SignupScreen() {
     const handleResendCode = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://172.20.10.7:8080/api/users/send-verification?email=${email}`);
+            const response = await fetch(`http://192.168.0.119:8080/api/users/send-verification?email=${email}`);
             const text = await response.text();
             if (response.ok) {
                 alert('Đã gửi lại mã xác nhận!');

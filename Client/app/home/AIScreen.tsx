@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   FlatList,
@@ -9,101 +8,165 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useAppTheme } from '../../context/ThemeContext'; // ✅ THÊM DÒNG NÀY
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
+
+type Message = {
+  text: string;
+  sender: 'user' | 'bot';
+};
 
 export default function AIScreen() {
   const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState<string[]>([]);
-  const tabBarHeight = useBottomTabBarHeight();
-
-  const { theme } = useAppTheme(); // ✅ LẤY THEME
+  const [messages, setMessages] = useState<Message[]>([]);
+  const flatListRef = useRef<FlatList>(null);
+  const insets = useSafeAreaInsets();
+  const { theme } = useAppTheme();
   const isDark = theme === 'dark';
 
   const send = () => {
     if (!inputText.trim()) return;
-    setMessages((prev) => [...prev, inputText]);
+    const userMessage: Message = { text: inputText.trim(), sender: 'user' };
+    const botMessage: Message = {
+      text: `Bot trả lời: "${inputText.trim()}"`,
+      sender: 'bot',
+    };
+    setMessages((prev) => [...prev, userMessage, botMessage]);
     setInputText('');
   };
 
+  useEffect(() => {
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#111' : '#fff' }]}>
-        <Text style={[styles.headerText, { color: isDark ? '#fff' : '#000' }]}>TripChat</Text>
-      </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom + 60 : 0}
+    >
+      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+        <View style={[styles.header, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+          <Text style={[styles.headerText, { color: isDark ? '#fff' : '#000' }]}>TripChat</Text>
+        </View>
 
-      {/* Messages */}
-      <FlatList
-        data={messages}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={[styles.messageBubble, { backgroundColor: isDark ? '#333' : '#e6e6e6' }]}>
-            <Text style={[styles.messageText, { color: isDark ? '#fff' : '#000' }]}>{item}</Text>
-          </View>
-        )}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-      />
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View
+              style={[
+                styles.messageContainer,
+                item.sender === 'user' ? styles.right : styles.left,
+              ]}
+            >
+              <Text style={styles.avatar}>{item.sender === 'user' ? '🧑' : '🤖'}</Text>
+              <View
+                style={[
+                  styles.messageBubble,
+                  {
+                    backgroundColor: item.sender === 'user'
+                      ? (isDark ? '#222' : '#ddd')
+                      : (isDark ? '#444' : '#eee'),
+                  },
+                ]}
+              >
+                <Text style={{ color: isDark ? '#fff' : '#000' }}>{item.text}</Text>
+              </View>
+            </View>
+          )}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: insets.bottom + 100,
+          }}
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+        />
 
-      {/* Input */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={tabBarHeight + 10}
-      >
-        <View style={[styles.inputWrap, { backgroundColor: isDark ? '#111' : '#fff', marginBottom: tabBarHeight }]}>
+        <View
+          style={[
+            styles.inputWrap,
+            {
+              backgroundColor: isDark ? '#000' : '#fff',
+              paddingBottom: insets.bottom + 35,
+            },
+          ]}
+        >
           <TextInput
             value={inputText}
             onChangeText={setInputText}
+            placeholder="Ask something..."
+            placeholderTextColor={isDark ? '#aaa' : '#555'}
             style={[
               styles.input,
               {
-                backgroundColor: isDark ? '#222' : '#f2f2f2',
+                backgroundColor: isDark ? '#111' : '#f0f0f0',
                 color: isDark ? '#fff' : '#000',
               },
             ]}
-            placeholder="Ask something..."
-            placeholderTextColor={isDark ? '#aaa' : '#555'}
           />
-          <TouchableOpacity onPress={send} style={styles.sendBtn}>
-            <Ionicons name="send" size={20} color="#fff" />
+          <TouchableOpacity
+            onPress={send}
+            style={[
+              styles.sendBtn,
+              {
+                backgroundColor: isDark ? '#fff' : '#000',
+              },
+            ]}
+          >
+            <Ionicons name="send" size={20} color={isDark ? '#000' : '#fff'} />
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  messageContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  headerText: { fontSize: 18, fontWeight: 'bold' },
-  messageBubble: {
-    padding: 10,
-    borderRadius: 10,
+    alignItems: 'flex-end',
     marginBottom: 10,
-    alignSelf: 'flex-end',
-    maxWidth: '80%',
+    maxWidth: '85%',
   },
-  messageText: {
-    fontSize: 14,
+  left: {
+    alignSelf: 'flex-start',
+  },
+  right: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row-reverse',
+  },
+  avatar: {
+    fontSize: 18,
+    marginHorizontal: 6,
+  },
+  messageBubble: {
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    paddingTop: 12,
+    paddingHorizontal: 12,
+    borderTopWidth: 1,
+    borderColor: '#ccc',
   },
   input: {
     flex: 1,
@@ -113,9 +176,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   sendBtn: {
-    backgroundColor: '#1e90ff',
     padding: 10,
     borderRadius: 20,
     marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
