@@ -46,6 +46,14 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.32</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -55,29 +63,36 @@
     </dependencies>
 
     <build>
-  <plugins>
-    <!-- Maven Compiler Plugin ép cứng javac -->
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>3.11.0</version>
-      <configuration>
-        <release>17</release>
-        <fork>true</fork>
-        <executable>/usr/local/Cellar/openjdk@17/17.0.15/libexec/openjdk.jdk/Contents/Home/bin/javac</executable>
-      </configuration>
-    </plugin>
+        <plugins>
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>17</release>
+                    <fork>true</fork>
+                    <executable>/usr/local/Cellar/openjdk@17/17.0.15/libexec/openjdk.jdk/Contents/Home/bin/javac</executable>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.32</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
 
-    <!-- Spring Boot Plugin -->
-    <plugin>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-maven-plugin</artifactId>
-      <configuration>
-        <mainClass>com.nexttrip2.server.ServerApplication</mainClass>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
+            <!-- Spring Boot Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.nexttrip2.server.ServerApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 
 </project>

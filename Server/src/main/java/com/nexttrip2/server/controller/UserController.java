@@ -1,5 +1,6 @@
 package com.nexttrip2.server.controller;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -9,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.nexttrip2.server.model.User;
-import com.nexttrip2.server.service.EmailService;
-import com.nexttrip2.server.service.UserService;
+import com.nexttrip2.server.repository.UserRepository; // ✅ Thêm để gọi findAll()
+import com.nexttrip2.server.responses.UserResponse;
+import com.nexttrip2.server.service.imple.EmailService;
+import com.nexttrip2.server.service.imple.UserService;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -22,6 +25,9 @@ public class UserController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private UserRepository userRepository; // ✅ Dùng để lấy danh sách user
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
@@ -68,4 +74,28 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sai mã hoặc đã hết hạn.");
         }
     }
+
+    @GetMapping("/info")
+    public ResponseEntity<?> getUserInfo(@RequestParam String email) {
+        try {
+            UserResponse userResponse = userService.getUserByEmail(email);
+            return ResponseEntity.ok(userResponse);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body("Không tìm thấy người dùng với email: " + email);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body("Lỗi server: " + ex.getMessage());
+        }
+    }
+
+    // ✅ [DEBUG] API trả về toàn bộ danh sách user trong MongoDB
+    // Gọi qua: GET http://localhost:8080/api/users/all
+    @GetMapping("/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+    List<User> users = userRepository.findAll();
+    System.out.println("Tổng số user lấy được: " + users.size());
+    return ResponseEntity.ok(users);
+}
+
 }
