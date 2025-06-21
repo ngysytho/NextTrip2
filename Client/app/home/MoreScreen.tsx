@@ -17,6 +17,7 @@ type MenuItem = {
   icon: string;
   label: string;
   isLogout?: boolean;
+  onPress?: () => void;
 };
 
 export default function MoreScreen() {
@@ -37,10 +38,32 @@ export default function MoreScreen() {
   }, []);
 
   const handleLogout = async () => {
-    await AsyncStorage.multiRemove(['access_token', 'display_name']);
+    await AsyncStorage.multiRemove([
+      'access_token',
+      'display_name',
+      'username',
+      'email',
+      'birth_date',
+      'is_active',
+      'created_at',
+      'updated_at',
+    ]);
     setIsLoggedIn(false);
     setDisplayName('');
     Alert.alert('Đăng xuất thành công');
+  };
+
+  const handleViewProfile = async () => {
+    const name = await AsyncStorage.getItem('display_name');
+    const email = await AsyncStorage.getItem('email');
+    const birth = await AsyncStorage.getItem('birth_date');
+    const created = await AsyncStorage.getItem('created_at');
+    const active = await AsyncStorage.getItem('is_active');
+
+    Alert.alert(
+      'Thông tin cá nhân',
+      `👤 Họ tên: ${name}\n📧 Email: ${email}\n🎂 Ngày sinh: ${birth}\n📅 Tạo lúc: ${created}\n✅ Trạng thái: ${active === 'true' ? 'Đã xác minh' : 'Chưa xác minh'}`
+    );
   };
 
   const getMenuItems = (): MenuItem[] => {
@@ -55,9 +78,16 @@ export default function MoreScreen() {
       { icon: 'help-circle-outline', label: 'Chính sách quy định' },
       { icon: 'settings-outline', label: 'Cài đặt' },
     ];
+
     if (isLoggedIn) {
+      items.unshift({
+        icon: 'person-outline',
+        label: 'Thông tin cá nhân',
+        onPress: handleViewProfile,
+      });
       items.push({ icon: 'log-out-outline', label: 'Đăng xuất', isLogout: true });
     }
+
     return items;
   };
 
@@ -65,7 +95,7 @@ export default function MoreScreen() {
     <TouchableOpacity
       onPress={() => {
         if (item.isLogout) return handleLogout();
-        // You can handle other actions based on label here
+        if (item.onPress) return item.onPress();
       }}
       style={[
         styles.item,
@@ -129,7 +159,7 @@ export default function MoreScreen() {
               Chọn chế độ hiển thị:
             </Text>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              {['light', 'dark', 'system'].map((m) => (
+              {['light', 'dark'].map((m) => (
                 <TouchableOpacity
                   key={m}
                   onPress={() => setMode(m as any)}
@@ -141,11 +171,7 @@ export default function MoreScreen() {
                   }}
                 >
                   <Text style={{ color: mode === m ? '#007AFF' : isDark ? '#fff' : '#000' }}>
-                    {m === 'light'
-                      ? '☀️ Sáng'
-                      : m === 'dark'
-                        ? '🌙 Tối'
-                        : '⚙️ Hệ thống'}
+                    {m === 'light' ? '☀️ Sáng' : '🌙 Tối'}
                   </Text>
                 </TouchableOpacity>
               ))}
