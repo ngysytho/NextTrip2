@@ -27,17 +27,20 @@ public class User {
     @Field("displayName_user")
     private String displayName_user;
 
-    @Field("birth_date")
-    private Date birth_date;
+    @Field("birth_date_user")  // ✅ Sửa đúng tên field MongoDB
+    private Date birth_date_user;
 
     @Field("verifyToken_user")
     private String verifyToken_user;
 
     @Field("isActive_user")
-    private Boolean isActive_user = false; // ✅ dùng Boolean thay vì boolean
+    private Boolean isActive_user = false;
 
     @Field("createdAt_user")
     private Date createdAt_user = new Date();
+
+    @Field("updatedAt_user")
+    private Date updatedAt_user = new Date();
 
     // ======== Getters và Setters ========
 
@@ -85,12 +88,12 @@ public class User {
         this.displayName_user = displayName_user;
     }
 
-    public Date getBirth_date() {
-        return birth_date;
+    public Date getBirth_date_user() {
+        return birth_date_user;
     }
 
-    public void setBirth_date(Date birth_date) {
-        this.birth_date = birth_date;
+    public void setBirth_date_user(Date birth_date_user) {
+        this.birth_date_user = birth_date_user;
     }
 
     public String getVerifyToken_user() {
@@ -115,5 +118,22 @@ public class User {
 
     public void setCreatedAt_user(Date createdAt_user) {
         this.createdAt_user = createdAt_user;
+    }
+
+    public Date getUpdatedAt_user() {
+        return updatedAt_user;
+    }
+
+    public void setUpdatedAt_user(Date updatedAt_user) {
+        this.updatedAt_user = updatedAt_user;
+    }
+
+    // ====== Tên ngắn gọi bên response nếu cần ======
+    public Date getCreatedAt() {
+        return createdAt_user;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt_user;
     }
 }
