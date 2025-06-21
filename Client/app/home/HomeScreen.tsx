@@ -120,7 +120,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Tab selection: Du Lịch - Nhà Hàng - Quán Nước */}
       <View style={[styles.tabContainer, { backgroundColor: isDark ? '#111' : 'black' }]}>
         {tabs.map((tab) => (
           <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tabItem}>
@@ -132,7 +131,6 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* Grid content */}
       <FlatList
         data={tabData[activeTab]}
         keyExtractor={(_, index) => index.toString()}
@@ -149,19 +147,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingHorizontal: 16,
+    paddingTop: 12, paddingBottom: 8,
   },
   logo: { fontSize: 28, fontWeight: 'bold' },
   actions: { flexDirection: 'row', alignItems: 'center' },
   iconButton: { marginLeft: 16 },
   tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: 'row', justifyContent: 'space-around',
     paddingVertical: 10,
   },
   tabItem: { alignItems: 'center' },
@@ -170,11 +164,8 @@ const styles = StyleSheet.create({
   tabUnderline: { marginTop: 4, width: 24, height: 3, backgroundColor: '#fff', borderRadius: 2 },
   gridContent: { paddingHorizontal: 8, paddingTop: 12 },
   card: {
-    marginBottom: 12,
-    borderRadius: 8,
-    overflow: 'hidden',
-    width: width / 2 - 16,
-    elevation: 2,
+    marginBottom: 12, borderRadius: 8,
+    overflow: 'hidden', width: width / 2 - 16, elevation: 2,
   },
   cardImage: { width: '100%', height: 120 },
   cardTitle: { fontSize: 14, fontWeight: 'bold', marginTop: 8, marginHorizontal: 8 },
