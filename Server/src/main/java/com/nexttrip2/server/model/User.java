@@ -13,6 +13,7 @@ public class User {
     @Id
     private String id;
 
+    @Field("userId")
     private String userId = UUID.randomUUID().toString();
 
     @Field("email_user")
@@ -27,14 +28,14 @@ public class User {
     @Field("displayName_user")
     private String displayName_user;
 
-    @Field("birth_date_user")  // ✅ Sửa đúng tên field MongoDB
+    @Field("birth_date_user")
     private Date birth_date_user;
 
     @Field("verifyToken_user")
     private String verifyToken_user;
 
     @Field("isActive_user")
-    private Boolean isActive_user = false;
+    private Boolean isActive_user = false;  // Dùng Boolean để cho phép null
 
     @Field("createdAt_user")
     private Date createdAt_user = new Date();
@@ -135,5 +136,8 @@ public class User {
 
     public Date getUpdatedAt() {
         return updatedAt_user;
+    }
+
+    public User() {
     }
 }

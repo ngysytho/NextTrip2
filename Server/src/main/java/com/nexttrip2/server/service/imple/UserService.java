@@ -4,23 +4,29 @@ import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.repository.UserRepository;
 import com.nexttrip2.server.responses.UserResponse;
 import com.nexttrip2.server.service.IUserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
+import java.util.Date;
 import java.util.Optional;
 
 @Service
 public class UserService implements IUserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
-    private EmailService emailService;
-
+    private final UserRepository userRepository;
+    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public UserService(UserRepository userRepository, EmailService emailService) {
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+    }
 
     @Override
     public void register(User user) throws Exception {
@@ -36,33 +42,47 @@ public class UserService implements IUserService {
             throw new Exception("Mật khẩu không được để trống.");
         }
 
-        if (Boolean.TRUE.equals(userRepository.existsByEmail_user(user.getEmail_user()))) {
-            throw new Exception("Email đã được đăng ký.");
+        // Nếu email đã xác minh => chặn
+        if (userRepository.findActiveUserByEmail(user.getEmail_user()).isPresent()) {
+            throw new Exception("Email đã được xác minh bởi tài khoản khác.");
         }
 
-        if (Boolean.TRUE.equals(userRepository.existsByUsername_user(user.getUsername_user()))) {
-            throw new Exception("Username đã tồn tại.");
+        // Nếu email đã tồn tại nhưng chưa xác minh => gửi lại mã xác minh mới
+        Optional<User> existingUser = userRepository.findByEmail_user(user.getEmail_user());
+        if (existingUser.isPresent() && !Boolean.TRUE.equals(existingUser.get().getIsActive_user())) {
+            User pendingUser = existingUser.get();
+            String newCode = String.format("%06d", new SecureRandom().nextInt(999999));
+            pendingUser.setVerifyToken_user(newCode);
+            pendingUser.setPassword_user(passwordEncoder.encode(user.getPassword_user()));
+            emailService.sendVerificationCode(pendingUser.getEmail_user(), newCode);
+            userRepository.save(pendingUser);
+            throw new Exception("Email đã tồn tại nhưng chưa xác minh. Đã gửi lại mã xác nhận.");
         }
 
-        String hashedPassword = passwordEncoder.encode(user.getPassword_user());
-        user.setPassword_user(hashedPassword);
+        // Username đã được xác minh bởi tài khoản khác => chặn
+        if (userRepository.findActiveUserByUsername(user.getUsername_user()).isPresent()) {
+            throw new Exception("Username đã được sử dụng bởi tài khoản xác minh.");
+        }
 
-        String verifyToken = String.format("%06d", (int) (Math.random() * 1000000));
+        // Tạo mới tài khoản
+        user.setPassword_user(passwordEncoder.encode(user.getPassword_user()));
+        String verifyToken = String.format("%06d", new SecureRandom().nextInt(999999));
         user.setVerifyToken_user(verifyToken);
         user.setIsActive_user(false);
+        user.setCreatedAt_user(new Date());
+        user.setUpdatedAt_user(new Date());
 
         emailService.sendVerificationCode(user.getEmail_user(), verifyToken);
-        System.out.println("Đã gửi mã xác thực tới: " + user.getEmail_user());
-
+        logger.info("Đã gửi mã xác thực tới: {}", user.getEmail_user());
         userRepository.save(user);
     }
 
     @Override
     public boolean verifyCode(String email, String code) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findByEmail_user(email));
+        Optional<User> userOpt = userRepository.findByEmail_user(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (user.getVerifyToken_user() != null && user.getVerifyToken_user().equals(code)) {
+            if (code.equals(user.getVerifyToken_user())) {
                 user.setIsActive_user(true);
                 user.setVerifyToken_user(null);
                 userRepository.save(user);
@@ -74,21 +94,16 @@ public class UserService implements IUserService {
 
     @Override
     public boolean login(String email, String rawPassword) {
-        User user = userRepository.findByEmail_user(email);
-        return user != null &&
-                Boolean.TRUE.equals(user.getIsActive_user()) &&
-                passwordEncoder.matches(rawPassword, user.getPassword_user());
+        return userRepository.findByEmail_user(email)
+                .filter(user -> Boolean.TRUE.equals(user.getIsActive_user()) &&
+                        passwordEncoder.matches(rawPassword, user.getPassword_user()))
+                .isPresent();
     }
 
-
-
-   @Override
+    @Override
     public UserResponse getUserByEmail(String email) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findByEmail_user(email));
-        if (userOpt.isPresent()) {
-            return new UserResponse(userOpt.get());
-        }
-        throw new RuntimeException("Không tìm thấy người dùng với email: " + email);
+        return userRepository.findByEmail_user(email)
+                .map(UserResponse::new)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
     }
-
 }
