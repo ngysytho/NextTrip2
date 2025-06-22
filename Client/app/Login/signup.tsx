@@ -78,17 +78,23 @@ export default function SignupScreen() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email_user: email,
-                    username_user: username,
+                    email_user: email.trim(),
+                    username_user: username.trim(),
                     password_user: password,
-                    displayName_user: name,
-                    birth_date: birthDate.toISOString(),
+                    displayName_user: name.trim(),
+                    birth_date_user: birthDate.toISOString(),
                 }),
             });
 
             const text = await response.text();
-            if (response.ok) {
-                alert('Đăng ký thành công! Mã xác nhận đã gửi về email.');
+            const isUnverified = text.toLowerCase().includes('chưa xác minh');
+
+            if (response.ok || isUnverified) {
+                if (!response.ok && isUnverified) {
+                    console.log("Email tồn tại nhưng chưa xác minh. Hiện ô xác minh.");
+                } else {
+                    alert('Đăng ký thành công! Mã xác nhận đã gửi về email.');
+                }
                 setShowVerifyInput(true);
             } else {
                 alert(`Lỗi: ${text}`);
@@ -109,11 +115,11 @@ export default function SignupScreen() {
 
         setLoading(true);
         try {
-            const response = await fetch('http://172.20.10.7:8080/api/users/verify-code', {
+            const response = await fetch('http://192.168.0.119:8080/api/users/verify-code', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: email,
+                    email: email.trim(),
                     code: verificationCode,
                 }),
             });
@@ -136,12 +142,13 @@ export default function SignupScreen() {
     const handleResendCode = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://192.168.0.119:8080/api/users/send-verification?email=${email}`);
+            const response = await fetch(`http://192.168.0.119:8080/api/users/send-verification?email=${email.trim()}`);
             const text = await response.text();
             if (response.ok) {
                 alert('Đã gửi lại mã xác nhận!');
                 setCountdown(60);
                 setCanResend(false);
+                setShowVerifyInput(true);
             } else {
                 alert('Gửi lại thất bại: ' + text);
             }
@@ -153,39 +160,59 @@ export default function SignupScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f4f6f8' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#fff' }}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
                 <ScrollView contentContainerStyle={styles.container}>
-                    <Text style={[styles.title, { color: isDark ? '#fff' : '#222' }]}>Đăng ký</Text>
+                    <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>Đăng ký</Text>
 
-                    <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Họ và Tên</Text>
-                    <TextInput style={[styles.input, isDark && styles.inputDark]} value={name} onChangeText={setName} placeholder="Họ và tên" placeholderTextColor="#888" />
+                    <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Họ và Tên</Text>
+                    <TextInput style={[styles.input, isDark && styles.inputDark]} value={name} onChangeText={setName} placeholder="Họ và tên" placeholderTextColor="#666" />
 
-                    <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Username</Text>
-                    <TextInput style={[styles.input, isDark && styles.inputDark]} value={username} onChangeText={setUsername} placeholder="Tên đăng nhập" placeholderTextColor="#888" />
+                    <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Username</Text>
+                    <TextInput style={[styles.input, isDark && styles.inputDark]} value={username} onChangeText={setUsername} placeholder="Tên đăng nhập" placeholderTextColor="#666" autoCapitalize="none" />
 
-                    <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Email</Text>
-                    <TextInput style={[styles.input, isDark && styles.inputDark]} value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" placeholderTextColor="#888" />
+                    <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Email</Text>
+                    <TextInput style={[styles.input, isDark && styles.inputDark]} value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" placeholderTextColor="#666" autoCapitalize="none" />
 
-                    <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Mật khẩu</Text>
+                    <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Mật khẩu</Text>
                     <View style={styles.passwordWrapper}>
-                        <TextInput style={[styles.input, { flex: 1 }, isDark && styles.inputDark]} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} placeholder="Mật khẩu" placeholderTextColor="#888" />
+                        <TextInput
+                            style={[styles.input, { flex: 1 }, isDark && styles.inputDark]}
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                            placeholder="Mật khẩu"
+                            placeholderTextColor="#666"
+                            textContentType="oneTimeCode"
+                            autoComplete="off"
+                            autoCorrect={false}
+                        />
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                            <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color="#888" />
+                            <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color="#666" />
                         </TouchableOpacity>
                     </View>
 
-                    <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Nhập lại mật khẩu</Text>
+                    <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Nhập lại mật khẩu</Text>
                     <View style={styles.passwordWrapper}>
-                        <TextInput style={[styles.input, { flex: 1 }, isDark && styles.inputDark]} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword} placeholder="Nhập lại mật khẩu" placeholderTextColor="#888" />
+                        <TextInput
+                            style={[styles.input, { flex: 1 }, isDark && styles.inputDark]}
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry={!showConfirmPassword}
+                            placeholder="Nhập lại mật khẩu"
+                            placeholderTextColor="#666"
+                            textContentType="oneTimeCode"
+                            autoComplete="off"
+                            autoCorrect={false}
+                        />
                         <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
-                            <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={22} color="#888" />
+                            <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={22} color="#666" />
                         </TouchableOpacity>
                     </View>
 
-                    <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Ngày sinh</Text>
+                    <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Ngày sinh</Text>
                     <TouchableOpacity onPress={() => setDatePickerVisibility(true)} style={[styles.input, isDark && styles.inputDark]}>
-                        <Text style={{ color: isDark ? '#fff' : '#444' }}>{birthDate.toLocaleDateString('vi-VN')}</Text>
+                        <Text style={{ color: isDark ? '#fff' : '#000' }}>{birthDate.toLocaleDateString('vi-VN')}</Text>
                     </TouchableOpacity>
                     {isDatePickerVisible && (
                         <DateTimePicker
@@ -209,10 +236,10 @@ export default function SignupScreen() {
             {/* Modal xác minh */}
             <Modal visible={showVerifyInput} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, isDark && { backgroundColor: '#111' }]}>
-                        <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#333' }]}>Xác minh Email</Text>
-                        <Text style={[styles.label, { color: isDark ? '#aaa' : '#888' }]}>Nhập mã xác nhận đã gửi tới email</Text>
-                        <TextInput style={[styles.input, isDark && styles.inputDark]} value={verificationCode} onChangeText={setVerificationCode} placeholder="Mã xác nhận" keyboardType="number-pad" placeholderTextColor="#888" />
+                    <View style={[styles.modalContent, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+                        <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#000' }]}>Xác minh Email</Text>
+                        <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Nhập mã xác nhận đã gửi tới email</Text>
+                        <TextInput style={[styles.input, isDark && styles.inputDark]} value={verificationCode} onChangeText={setVerificationCode} placeholder="Mã xác nhận" keyboardType="number-pad" placeholderTextColor="#666" />
 
                         <TouchableOpacity onPress={handleVerifyCode} style={styles.button} disabled={loading}>
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Xác minh</Text>}
@@ -220,16 +247,16 @@ export default function SignupScreen() {
 
                         {canResend ? (
                             <TouchableOpacity onPress={handleResendCode} style={{ marginTop: 12 }}>
-                                <Text style={{ color: '#007AFF', textAlign: 'center' }}>Gửi lại mã xác nhận</Text>
+                                <Text style={{ color: isDark ? '#fff' : '#000', textAlign: 'center' }}>Gửi lại mã xác nhận</Text>
                             </TouchableOpacity>
                         ) : (
-                            <Text style={{ marginTop: 12, textAlign: 'center', color: '#999' }}>
+                            <Text style={{ marginTop: 12, textAlign: 'center', color: '#888' }}>
                                 Bạn có thể gửi lại sau {countdown}s
                             </Text>
                         )}
 
                         <TouchableOpacity onPress={() => setShowVerifyInput(false)} style={styles.cancelButton}>
-                            <Text style={styles.cancelButtonText}>Huỷ</Text>
+                            <Text style={[styles.cancelButtonText, { color: isDark ? '#fff' : '#000' }]}>Huỷ</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -243,30 +270,29 @@ const styles = StyleSheet.create({
     title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 },
     label: { fontSize: 13, marginBottom: 6, marginTop: 12 },
     input: {
-        borderWidth: 1, borderColor: '#ddd', backgroundColor: '#fff',
+        borderWidth: 1, borderColor: '#ccc', backgroundColor: '#fff',
         paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12,
         fontSize: 16, marginBottom: 4,
     },
     inputDark: {
-        backgroundColor: '#222',
+        backgroundColor: '#111',
         color: '#fff',
-        borderColor: '#555',
+        borderColor: '#444',
     },
     passwordWrapper: { flexDirection: 'row', alignItems: 'center' },
     eyeIcon: { position: 'absolute', right: 12, top: 14 },
     button: {
-        backgroundColor: '#007AFF', paddingVertical: 16, borderRadius: 12,
+        backgroundColor: '#000', paddingVertical: 16, borderRadius: 12,
         alignItems: 'center', marginTop: 24,
     },
     buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalContent: {
-        backgroundColor: '#fff',
         padding: 24,
         borderRadius: 16,
         width: '80%',
@@ -284,7 +310,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     cancelButtonText: {
-        color: '#007AFF',
         fontSize: 14,
     },
 });
