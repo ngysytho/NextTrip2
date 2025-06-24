@@ -16,11 +16,17 @@ public interface UserRepository extends MongoRepository<User, String> {
     @Query("{ 'username_user': ?0, 'isActive_user': true }")
     Optional<User> findActiveUserByUsername(String username_user);
 
+    @Query("{ 'phone_user': ?0, 'isActive_user': true }")
+    Optional<User> findActiveUserByPhone_user(String phone_user);
+
     @Query(value = "{ 'email_user': ?0, 'isActive_user': true }", exists = true)
     Boolean existsActiveByEmail(String email_user);
 
     @Query(value = "{ 'username_user': ?0, 'isActive_user': true }", exists = true)
     Boolean existsActiveByUsername(String username_user);
+
+    @Query(value = "{ 'phone_user': ?0, 'isActive_user': true }", exists = true)
+    Boolean existsActiveByPhone_user(String phone_user);
 
     @Query(value = "{ 'email_user': ?0 }", exists = true)
     Boolean existsByEmail_user(String email_user);
@@ -28,8 +34,14 @@ public interface UserRepository extends MongoRepository<User, String> {
     @Query(value = "{ 'username_user': ?0 }", exists = true)
     Boolean existsByUsername_user(String username_user);
 
+    @Query(value = "{ 'phone_user': ?0 }", exists = true)
+    Boolean existsByPhone_user(String phone_user);
+
     @Query("{ 'email_user': ?0 }")
     Optional<User> findByEmail_user(String email_user);
+
+    @Query("{ 'phone_user': ?0 }")
+    Optional<User> findByPhone_user(String phone_user);
 
     @Query("{ 'verifyToken_user': ?0 }")
     Optional<User> findByVerifyToken_user(String verifyToken_user);
