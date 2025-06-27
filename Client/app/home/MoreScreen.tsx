@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppTheme } from '../../context/ThemeContext';
+import { STORAGE_KEYS } from '../../constants/storageKeys';
 
 type MenuItem = {
   icon: string;
@@ -29,8 +30,8 @@ export default function MoreScreen() {
 
   useEffect(() => {
     const checkLogin = async () => {
-      const token = await AsyncStorage.getItem('access_token');
-      const name = await AsyncStorage.getItem('display_name');
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      const name = await AsyncStorage.getItem(STORAGE_KEYS.DISPLAY_NAME);
       setIsLoggedIn(!!token);
       setDisplayName(name || '');
     };
@@ -39,31 +40,39 @@ export default function MoreScreen() {
 
   const handleLogout = async () => {
     await AsyncStorage.multiRemove([
-      'access_token',
-      'display_name',
-      'username',
-      'email',
-      'birth_date',
-      'is_active',
-      'created_at',
-      'updated_at',
+      STORAGE_KEYS.ACCESS_TOKEN,
+      STORAGE_KEYS.DISPLAY_NAME,
+      STORAGE_KEYS.USERNAME,
+      STORAGE_KEYS.EMAIL,
+      STORAGE_KEYS.BIRTH_DATE,
+      STORAGE_KEYS.GENDER,
+      STORAGE_KEYS.CREATED_AT,
+      STORAGE_KEYS.UPDATED_AT,
     ]);
     setIsLoggedIn(false);
     setDisplayName('');
-    Alert.alert('Đăng xuất thành công');
+    Alert.alert('Đăng xuất', 'Bạn đã đăng xuất thành công');
   };
 
   const handleViewProfile = async () => {
-    const name = await AsyncStorage.getItem('display_name');
-    const email = await AsyncStorage.getItem('email');
-    const birth = await AsyncStorage.getItem('birth_date');
-    const created = await AsyncStorage.getItem('created_at');
-    const active = await AsyncStorage.getItem('is_active');
+    try {
+      const name = await AsyncStorage.getItem(STORAGE_KEYS.DISPLAY_NAME);
+      const username = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
+      const email = await AsyncStorage.getItem(STORAGE_KEYS.EMAIL);
+      const birth = await AsyncStorage.getItem(STORAGE_KEYS.BIRTH_DATE);
+      const gender = await AsyncStorage.getItem(STORAGE_KEYS.GENDER);
 
-    Alert.alert(
-      'Thông tin cá nhân',
-      `👤 Họ tên: ${name}\n📧 Email: ${email}\n🎂 Ngày sinh: ${birth}\n📅 Tạo lúc: ${created}\n✅ Trạng thái: ${active === 'true' ? 'Đã xác minh' : 'Chưa xác minh'}`
-    );
+      const genderLabel =
+        gender === 'MALE' ? 'Nam' : gender === 'FEMALE' ? 'Nữ' : 'Không rõ';
+
+      Alert.alert(
+        'Thông tin cá nhân',
+        `👤 Họ tên: ${name || 'Chưa có'}\n👤 Tên người dùng: ${username || 'Chưa có'}\n📧 Email: ${email || 'Chưa có'}\n🎂 Ngày sinh: ${birth || 'Chưa có'}\n✅ Giới tính: ${genderLabel}`
+      );
+    } catch (err) {
+      console.error('Lỗi khi hiển thị thông tin cá nhân:', err);
+      Alert.alert('Lỗi', 'Không thể lấy thông tin cá nhân');
+    }
   };
 
   const getMenuItems = (): MenuItem[] => {

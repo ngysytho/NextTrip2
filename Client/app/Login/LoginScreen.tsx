@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppTheme } from '../../context/ThemeContext';
+import { STORAGE_KEYS } from '../../constants/storageKeys';
 
 export default function LoginScreen() {
   const [phoneOrEmail, setPhoneOrEmail] = useState('');
@@ -34,7 +35,7 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      // ✅ Gửi yêu cầu đăng nhập
+      // Gửi yêu cầu đăng nhập
       const loginRes = await fetch('http://192.168.0.119:8080/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,10 +52,10 @@ export default function LoginScreen() {
         return;
       }
 
-      // ✅ Lưu token
-      await AsyncStorage.setItem('access_token', loginText);
+      // Lưu token
+      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, loginText);
 
-      // ✅ Gọi API lấy thông tin người dùng
+      // Lấy thông tin người dùng
       const userInfoRes = await fetch(
         `http://192.168.0.119:8080/api/users/info?email=${phoneOrEmail.trim()}`
       );
@@ -68,18 +69,18 @@ export default function LoginScreen() {
       const userData = await userInfoRes.json();
       console.log('✅ userData:', userData);
 
-      // ✅ Lưu thông tin người dùng
+      // Lưu thông tin người dùng
       await AsyncStorage.multiSet([
-        ['display_name', userData.displayName_user ?? ''],
-        ['username', userData.username_user ?? ''],
-        ['email', userData.email_user ?? ''],
-        ['birth_date', userData.birth_date_user ?? ''],
-        ['is_active', String(userData.isActive_user ?? false)],
-        ['created_at', userData.createdAt ?? ''],
-        ['updated_at', userData.updatedAt ?? ''],
+        [STORAGE_KEYS.DISPLAY_NAME, userData.displayName_user ?? ''],
+        [STORAGE_KEYS.USERNAME, userData.username_user ?? ''],
+        [STORAGE_KEYS.EMAIL, userData.email_user ?? ''],
+        [STORAGE_KEYS.BIRTH_DATE, userData.birth_date_user ?? ''],
+        [STORAGE_KEYS.GENDER, String(userData.gender_user ?? '')],
+        [STORAGE_KEYS.CREATED_AT, userData.createdAt ?? ''],
+        [STORAGE_KEYS.UPDATED_AT, userData.updatedAt ?? ''],
       ]);
 
-      Alert.alert('Thành công', 'Đăng nhập thành công');
+      Alert.alert('Thành công', '🎉 Đăng nhập thành công!');
       router.replace('/');
     } catch (err) {
       console.error('❌ Lỗi:', err);

@@ -21,12 +21,10 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [birthDate, setBirthDate] = useState(new Date());
   const [gender, setGender] = useState('MALE');
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [showVerifyInput, setShowVerifyInput] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [countdown, setCountdown] = useState(60);
@@ -54,17 +52,15 @@ export default function SignupScreen() {
   const handleSignUp = async () => {
     const today = new Date();
     const minBirthDate = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
-
     const trimmedContact = contact.trim();
     const isEmail = /^\S+@\S+\.\S+$/.test(trimmedContact);
-    const isPhone = /^0\d{9}$/.test(trimmedContact);
 
     if (!name || !username || !contact || !password || !confirmPassword) {
       alert('Vui lòng nhập đầy đủ thông tin');
       return;
     }
-    if (!isEmail && !isPhone) {
-      alert('Vui lòng nhập email hoặc số điện thoại hợp lệ');
+    if (!isEmail) {
+      alert('Vui lòng nhập đúng định dạng email');
       return;
     }
     if (password !== confirmPassword) {
@@ -79,16 +75,14 @@ export default function SignupScreen() {
     setLoading(true);
 
     try {
-      const body: any = {
+      const body = {
         username_user: username.trim(),
         password_user: password,
         displayName_user: name.trim(),
         birth_date_user: birthDate.toISOString(),
         gender_user: gender,
+        email_user: trimmedContact,
       };
-
-      if (isEmail) body.email_user = trimmedContact;
-      else body.phone_user = trimmedContact;
 
       const response = await fetch('http://192.168.0.119:8080/api/users/register', {
         method: 'POST',
@@ -100,7 +94,7 @@ export default function SignupScreen() {
       const isUnverified = text.toLowerCase().includes('chưa xác minh');
 
       if (response.ok || isUnverified) {
-        alert('Đăng ký thành công! Mã xác nhận đã gửi về ' + (isEmail ? 'email' : 'số điện thoại'));
+        alert('Đăng ký thành công! Mã xác nhận đã gửi về email');
         setShowVerifyInput(true);
       } else {
         alert(`Lỗi: ${text}`);
@@ -132,9 +126,9 @@ export default function SignupScreen() {
 
       const text = await response.text();
       if (response.ok) {
-        alert('Xác minh tài khoản thành công!');
+        alert('Xác minh tài khoản thành công! Mời bạn đăng nhập.');
         setShowVerifyInput(false);
-        router.replace('/');
+        router.replace('/Login/LoginScreen');
       } else {
         alert(`Lỗi xác minh: ${text}`);
       }
@@ -177,15 +171,18 @@ export default function SignupScreen() {
           <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Username</Text>
           <TextInput style={[styles.input, isDark && styles.inputDark]} value={username} onChangeText={setUsername} placeholder="Tên đăng nhập" placeholderTextColor="#666" autoCapitalize="none" />
 
-          <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Email hoặc Số điện thoại</Text>
+          <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Email</Text>
           <TextInput
             style={[styles.input, isDark && styles.inputDark]}
             value={contact}
             onChangeText={setContact}
-            placeholder="Email hoặc số điện thoại"
+            placeholder="Email"
             keyboardType="email-address"
             placeholderTextColor="#666"
             autoCapitalize="none"
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
           />
 
           <Text style={[styles.label, { color: isDark ? '#fff' : '#000' }]}>Mật khẩu</Text>
@@ -197,6 +194,9 @@ export default function SignupScreen() {
               secureTextEntry={!showPassword}
               placeholder="Mật khẩu"
               placeholderTextColor="#666"
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
               <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color="#666" />
@@ -212,6 +212,9 @@ export default function SignupScreen() {
               secureTextEntry={!showConfirmPassword}
               placeholder="Nhập lại mật khẩu"
               placeholderTextColor="#666"
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
             <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
               <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={22} color="#666" />
