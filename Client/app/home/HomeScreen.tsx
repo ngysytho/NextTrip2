@@ -18,13 +18,14 @@ import { useAppTheme } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-const tabs = ['Du Lịch', 'Nhà Hàng', 'Quán Nước'] as const;
+const tabs = ['Du Lịch', 'Nhà Hàng', 'Quán Nước', 'Khách Sạn'] as const;
 type TabKey = typeof tabs[number];
 
 type Item = {
   name: string;
   description: string;
   imageUrl: string;
+  rating: number; // ⭐️ số sao
 };
 
 const tabData: Record<TabKey, Item[]> = {
@@ -33,11 +34,13 @@ const tabData: Record<TabKey, Item[]> = {
       name: 'Vinpearl Phú Quốc',
       description: 'Resort 5⭐️ cực đẹp',
       imageUrl: 'https://via.placeholder.com/300x200.png?text=Vinpearl',
+      rating: 4.8,
     },
     {
       name: 'Sun World Bà Nà Hills',
       description: 'Vui chơi giải trí hấp dẫn',
       imageUrl: 'https://via.placeholder.com/300x200.png?text=Ba+Na+Hills',
+      rating: 4.5,
     },
   ],
   'Nhà Hàng': [
@@ -45,11 +48,13 @@ const tabData: Record<TabKey, Item[]> = {
       name: 'Nhà hàng Quê Nhà',
       description: 'Ẩm thực truyền thống',
       imageUrl: 'https://via.placeholder.com/300x200.png?text=Que+Nha',
+      rating: 4.3,
     },
     {
       name: 'Ẩm Thực Năm Sao',
       description: 'Món ăn cao cấp',
       imageUrl: 'https://via.placeholder.com/300x200.png?text=5+Sao',
+      rating: 4.7,
     },
   ],
   'Quán Nước': [
@@ -57,11 +62,27 @@ const tabData: Record<TabKey, Item[]> = {
       name: 'The Coffee House',
       description: 'Mua 1 tặng 1 nước ép',
       imageUrl: 'https://via.placeholder.com/300x200.png?text=Coffee+House',
+      rating: 4.6,
     },
     {
       name: 'TocoToco Trà Sữa',
       description: 'Giảm 20% cho đơn đầu',
       imageUrl: 'https://via.placeholder.com/300x200.png?text=TocoToco',
+      rating: 4.4,
+    },
+  ],
+  'Khách Sạn': [
+    {
+      name: 'Khách Sạn Intercontinental',
+      description: 'Dịch vụ chuẩn 5⭐️ quốc tế',
+      imageUrl: 'https://via.placeholder.com/300x200.png?text=Intercontinental',
+      rating: 4.9,
+    },
+    {
+      name: 'Khách Sạn Mường Thanh',
+      description: 'Giá tốt, tiện nghi đầy đủ',
+      imageUrl: 'https://via.placeholder.com/300x200.png?text=Muong+Thanh',
+      rating: 4.2,
     },
   ],
 };
@@ -85,7 +106,16 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }: { item: Item }) => (
     <View style={[styles.card, { backgroundColor: isDark ? '#111' : '#fff' }]}>
-      <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
+      <View>
+        <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
+
+        {/* Badge hiển thị rating */}
+        <View style={styles.ratingBadge}>
+          <Ionicons name="star" size={12} color="#FFD700" style={{ marginRight: 2 }} />
+          <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+        </View>
+      </View>
+
       <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#000' }]} numberOfLines={1}>
         {item.name}
       </Text>
@@ -170,4 +200,20 @@ const styles = StyleSheet.create({
   cardImage: { width: '100%', height: 120 },
   cardTitle: { fontSize: 14, fontWeight: 'bold', marginTop: 8, marginHorizontal: 8 },
   cardDesc: { fontSize: 12, marginHorizontal: 8, marginBottom: 8 },
+  ratingBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  ratingText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });
