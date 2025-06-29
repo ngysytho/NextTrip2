@@ -1,77 +1,44 @@
 package com.nexttrip2.server.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nexttrip2.server.model.User;
-
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class UserResponse {
 
-    @JsonProperty("id")
-    private String id;
+    private String username;
+    private String displayName;
+    private String email;
 
-    @JsonProperty("email_user")
-    private String email_user;
+    private String birthDate;
+    private String gender;
 
-    @JsonProperty("username_user")
-    private String username_user;
-
-    @JsonProperty("displayName_user")
-    private String displayName_user;
-
-    @JsonProperty("birth_date_user")
-    private Date birth_date_user;
-
-    @JsonProperty("isActive_user")
-    private Boolean isActive_user;
-
-    @JsonProperty("createdAt")
-    private Date createdAt;
-
-    @JsonProperty("updatedAt")
-    private Date updatedAt;
-
+    // Constructor that maps User object to UserResponse
     public UserResponse(User user) {
-        this.id = user.getId();
-        this.email_user = user.getEmail_user();
-        this.username_user = user.getUsername_user();
-        this.displayName_user = user.getDisplayName_user();
-        this.birth_date_user = user.getBirth_date_user();
-        this.isActive_user = user.getIsActive_user();
-        this.createdAt = user.getCreatedAt();
-        this.updatedAt = user.getUpdatedAt();
+        this.username = user.getUsername_user();
+        this.displayName = user.getDisplayName_user();
+        this.email = user.getEmail_user();
+
+        this.birthDate = formatDate(user.getBirth_date_user());
+        this.gender = user.getGender_user();
     }
 
-    // Optional: Getters (nếu dùng với Jackson thì không bắt buộc)
-    public String getId() {
-        return id;
+    // Format the birth date to a string
+    private String formatDate(Date birthDate) {
+        if (birthDate == null) {
+            return null;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // You can change the format
+        return sdf.format(birthDate);
     }
 
-    public String getEmail_user() {
-        return email_user;
-    }
+    // Getters
+    public String getUsername() { return username; }
+    public String getDisplayName() { return displayName; }
+    public String getEmail() { return email; }
 
-    public String getUsername_user() {
-        return username_user;
-    }
+    public String getBirthDate() { return birthDate; }
+    public String getGender() { return gender; }
 
-    public String getDisplayName_user() {
-        return displayName_user;
-    }
-
-    public Date getBirth_date_user() {
-        return birth_date_user;
-    }
-
-    public Boolean getIsActive_user() {
-        return isActive_user;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
+    // Optionally, you can add setters if required
 }

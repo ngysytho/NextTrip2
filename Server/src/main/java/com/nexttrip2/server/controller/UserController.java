@@ -1,6 +1,6 @@
 package com.nexttrip2.server.controller;
 
-import java.util.List;
+
 import java.util.Map;
 import java.util.Random;
 
@@ -26,8 +26,7 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private UserRepository userRepository; // ✅ Dùng để lấy danh sách user
+
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
@@ -41,19 +40,23 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
-        try {
-            boolean isAuthenticated = userService.login(user.getEmail_user(), user.getPassword_user());
-            if (isAuthenticated) {
-                return ResponseEntity.ok("Đăng nhập thành công");
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Sai email hoặc mật khẩu hoặc chưa xác minh.");
+        public ResponseEntity<?> login(@RequestBody User user) {
+            try {
+                User authenticatedUser = userService.authenticate(user.getEmail_user(), user.getPassword_user());
+                if (authenticatedUser != null) {
+                    UserResponse userResponse = new UserResponse(authenticatedUser);
+                    return ResponseEntity.ok(userResponse);
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body("Sai email hoặc mật khẩu hoặc chưa xác minh.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                    .body("Lỗi server: " + e.getMessage());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi server: " + e.getMessage());
         }
-    }
+
 
     @PostMapping("/send-verification")
     public String sendVerification(@RequestParam String email) {
@@ -89,13 +92,5 @@ public class UserController {
         }
     }
 
-    // ✅ [DEBUG] API trả về toàn bộ danh sách user trong MongoDB
-    // Gọi qua: GET http://localhost:8080/api/users/all
-    @GetMapping("/all")
-    public ResponseEntity<List<User>> getAllUsers() {
-    List<User> users = userRepository.findAll();
-    System.out.println("Tổng số user lấy được: " + users.size());
-    return ResponseEntity.ok(users);
-}
 
 }
