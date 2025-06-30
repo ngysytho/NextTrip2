@@ -16,15 +16,17 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/users/register",
-                    "/api/users/login",
-                    "/api/users/send-otp",
-                    "/api/users/verify-otp",
-                    "/api/users/send-verification",
-                    "/api/users/verify-code",
-                    "/api/places/**"  // ✅ thêm dòng này
-                ).permitAll()
+                    .requestMatchers(
+                        "/api/users/register",
+                        "/api/users/login",
+                        "/api/users/send-otp",
+                        "/api/users/verify-otp",
+                        "/api/users/send-verification",
+                        "/api/users/verify-code",
+                        "/api/users/change-password", // ✅ thêm dòng này
+                        "/api/places/**"
+                    ).permitAll()
+
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults());

@@ -1,18 +1,20 @@
 package com.nexttrip2.server.service.imple;
 
+import com.nexttrip2.server.dto.ChangePasswordRequestDTO; // ✅ IMPORT DTO
 import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.repository.UserRepository;
 import com.nexttrip2.server.responses.UserResponse;
 import com.nexttrip2.server.service.IUserService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserService implements IUserService {
@@ -124,7 +126,7 @@ public class UserService implements IUserService {
     }
 
     /**
-     * ✅ New method to return User object for Controller authenticate usage
+     * ✅ Authenticate trả về User object
      */
     public User authenticate(String email, String rawPassword) {
         logger.info("Authenticate for email: {}", email);
@@ -139,6 +141,32 @@ public class UserService implements IUserService {
         return userRepository.findByEmail_user(email)
                 .map(UserResponse::new)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
+    }
+
+    /**
+     * ✅ Đổi mật khẩu người dùng
+     */
+    public void changePassword(ChangePasswordRequestDTO request) {
+        logger.info("Đổi mật khẩu cho email: {}", request.getEmail());
+        Optional<User> userOpt = userRepository.findByEmail_user(request.getEmail());
+
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy người dùng với email: " + request.getEmail());
+        }
+
+        User user = userOpt.get();
+
+        // Kiểm tra mật khẩu cũ đúng không
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword_user())) {
+            throw new IllegalArgumentException("Mật khẩu cũ không đúng.");
+        }
+
+        // Mã hóa mật khẩu mới và lưu
+        user.setPassword_user(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt_user(new Date());
+
+        userRepository.save(user);
+        logger.info("Đổi mật khẩu thành công cho email: {}", user.getEmail_user());
     }
 
     private String generateOtp() {

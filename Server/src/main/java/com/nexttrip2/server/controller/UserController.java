@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.nexttrip2.server.dto.ChangePasswordRequestDTO;
 import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.responses.UserResponse;
 import com.nexttrip2.server.responses.LoginResponse;
@@ -36,7 +37,8 @@ public class UserController {
             return ResponseEntity.ok("Đăng ký thành công");
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi đăng ký: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi đăng ký: " + e.getMessage());
         }
     }
 
@@ -45,15 +47,9 @@ public class UserController {
         try {
             User authenticatedUser = userService.authenticate(user.getEmail_user(), user.getPassword_user());
             if (authenticatedUser != null) {
-                // Tạo JWT token
                 String token = jwtUtil.generateToken(authenticatedUser.getEmail_user());
-
-                // Tạo UserResponse
                 UserResponse userResponse = new UserResponse(authenticatedUser);
-
-                // Trả về LoginResponse
                 LoginResponse loginResponse = new LoginResponse(token, userResponse);
-
                 return ResponseEntity.ok(loginResponse);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -95,6 +91,20 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Không tìm thấy người dùng với email: " + email);
         } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi server: " + ex.getMessage());
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequestDTO request) {
+        try {
+            userService.changePassword(request);
+            return ResponseEntity.ok("Đổi mật khẩu thành công");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi server: " + ex.getMessage());
         }

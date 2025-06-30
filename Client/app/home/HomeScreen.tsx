@@ -74,7 +74,7 @@ export default function HomeScreen() {
       console.log('🔗 Fetching URL:', url);
 
       const res = await axios.get(url);
-      console.log('✅ Data response:', res.data);
+
 
       const apiData = res.data.data;
       const more = res.data.hasMore;
