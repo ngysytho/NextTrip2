@@ -8,45 +8,45 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "Users")
 public class User {
-    @Id
+    
     private String id;
 
     private String userId = UUID.randomUUID().toString();
 
-    @Field("email_user")
+    
     private String email_user;
 
-    @Field("phone_user")
+    
     private String phone_user;
 
-    @Field("password_user")
+    
     private String password_user;
 
-    @Field("username_user")
+    
     private String username_user;
 
-    @Field("displayName_user")
+    
     private String displayName_user;
 
-    @Field("birth_date_user")
+    
     private Date birth_date_user;
 
-    @Field("verifyToken_user")
+    
     private String verifyToken_user;
 
-    @Field("isActive_user")
+    
     private Boolean isActive_user = false;
 
-    @Field("createdAt_user")
+    
     private Date createdAt_user = new Date();
 
-    @Field("updatedAt_user")
+    
     private Date updatedAt_user = new Date();
 
-    @Field("gender_user")
+    
     private String gender_user;
 
-    @Field("avatar_user")
+    
     private String avatar_user = "https://i.ibb.co/m5sdf5p/default-avatar.png";
 
     // Getters and setters...

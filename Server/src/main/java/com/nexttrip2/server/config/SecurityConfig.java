@@ -22,7 +22,8 @@ public class SecurityConfig {
                     "/api/users/send-otp",
                     "/api/users/verify-otp",
                     "/api/users/send-verification",
-                    "/api/users/verify-code"
+                    "/api/users/verify-code",
+                    "/api/places/**"  // ✅ thêm dòng này
                 ).permitAll()
                 .anyRequest().authenticated()
             )
@@ -30,4 +31,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }

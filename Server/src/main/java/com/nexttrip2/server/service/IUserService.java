@@ -8,7 +8,9 @@ public interface IUserService {
 
     boolean verifyCode(String email, String code);
 
-    User authenticate(String email, String rawPassword);  // ✅ Nếu dùng authenticate mới
+    boolean verifyOtp(String email, String code); // nếu dùng OTP riêng
+
+    boolean login(String email, String rawPassword);
 
     UserResponse getUserByEmail(String email);
 }

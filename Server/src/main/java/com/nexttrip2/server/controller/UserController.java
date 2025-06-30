@@ -1,16 +1,13 @@
 package com.nexttrip2.server.controller;
 
-
 import java.util.Map;
 import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.nexttrip2.server.model.User;
-import com.nexttrip2.server.repository.UserRepository; // ✅ Thêm để gọi findAll()
 import com.nexttrip2.server.responses.UserResponse;
 import com.nexttrip2.server.service.imple.EmailService;
 import com.nexttrip2.server.service.imple.UserService;
@@ -20,13 +17,13 @@ import com.nexttrip2.server.service.imple.UserService;
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final EmailService emailService;
 
-    @Autowired
-    private EmailService emailService;
-
-
+    public UserController(UserService userService, EmailService emailService) {
+        this.userService = userService;
+        this.emailService = emailService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
@@ -40,23 +37,22 @@ public class UserController {
     }
 
     @PostMapping("/login")
-        public ResponseEntity<?> login(@RequestBody User user) {
-            try {
-                User authenticatedUser = userService.authenticate(user.getEmail_user(), user.getPassword_user());
-                if (authenticatedUser != null) {
-                    UserResponse userResponse = new UserResponse(authenticatedUser);
-                    return ResponseEntity.ok(userResponse);
-                } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                        .body("Sai email hoặc mật khẩu hoặc chưa xác minh.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body("Lỗi server: " + e.getMessage());
+    public ResponseEntity<?> login(@RequestBody User user) {
+        try {
+            User authenticatedUser = userService.authenticate(user.getEmail_user(), user.getPassword_user());
+            if (authenticatedUser != null) {
+                UserResponse userResponse = new UserResponse(authenticatedUser);
+                return ResponseEntity.ok(userResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Sai email hoặc mật khẩu hoặc chưa xác minh.");
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi server: " + e.getMessage());
         }
-
+    }
 
     @PostMapping("/send-verification")
     public String sendVerification(@RequestParam String email) {
@@ -85,12 +81,11 @@ public class UserController {
             return ResponseEntity.ok(userResponse);
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                .body("Không tìm thấy người dùng với email: " + email);
+                    .body("Không tìm thấy người dùng với email: " + email);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body("Lỗi server: " + ex.getMessage());
+                    .body("Lỗi server: " + ex.getMessage());
         }
     }
-
 
 }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,86 +9,41 @@ import {
   Image,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
-
 const tabs = ['Du Lịch', 'Nhà Hàng', 'Quán Nước', 'Khách Sạn'] as const;
 type TabKey = typeof tabs[number];
 
 type Item = {
-  name: string;
-  description: string;
-  imageUrl: string;
-  rating: number; // ⭐️ số sao
-};
-
-const tabData: Record<TabKey, Item[]> = {
-  'Du Lịch': [
-    {
-      name: 'Vinpearl Phú Quốc',
-      description: 'Resort 5⭐️ cực đẹp',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=Vinpearl',
-      rating: 4.8,
-    },
-    {
-      name: 'Sun World Bà Nà Hills',
-      description: 'Vui chơi giải trí hấp dẫn',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=Ba+Na+Hills',
-      rating: 4.5,
-    },
-  ],
-  'Nhà Hàng': [
-    {
-      name: 'Nhà hàng Quê Nhà',
-      description: 'Ẩm thực truyền thống',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=Que+Nha',
-      rating: 4.3,
-    },
-    {
-      name: 'Ẩm Thực Năm Sao',
-      description: 'Món ăn cao cấp',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=5+Sao',
-      rating: 4.7,
-    },
-  ],
-  'Quán Nước': [
-    {
-      name: 'The Coffee House',
-      description: 'Mua 1 tặng 1 nước ép',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=Coffee+House',
-      rating: 4.6,
-    },
-    {
-      name: 'TocoToco Trà Sữa',
-      description: 'Giảm 20% cho đơn đầu',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=TocoToco',
-      rating: 4.4,
-    },
-  ],
-  'Khách Sạn': [
-    {
-      name: 'Khách Sạn Intercontinental',
-      description: 'Dịch vụ chuẩn 5⭐️ quốc tế',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=Intercontinental',
-      rating: 4.9,
-    },
-    {
-      name: 'Khách Sạn Mường Thanh',
-      description: 'Giá tốt, tiện nghi đầy đủ',
-      imageUrl: 'https://via.placeholder.com/300x200.png?text=Muong+Thanh',
-      rating: 4.2,
-    },
-  ],
+  place_id: string;
+  name_places: string;
+  description_places: string;
+  image_url_places: string;
+  rating_places: number;
+  type_places: string;
 };
 
 export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>('Du Lịch');
+  const [data, setData] = useState<Record<TabKey, Item[]>>({
+    'Du Lịch': [],
+    'Nhà Hàng': [],
+    'Quán Nước': [],
+    'Khách Sạn': [],
+  });
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
   const { theme } = useAppTheme();
@@ -104,26 +59,62 @@ export default function HomeScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    fetchData(1); // Load trang đầu tiên khi vào hoặc đổi tab
+  }, [activeTab]);
+
+  const fetchData = async (pageNumber = 1) => {
+    if (!hasMore && pageNumber !== 1) return;
+
+    if (pageNumber === 1) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const url = `http://192.168.0.119:8080/api/places/category/${encodeURIComponent(activeTab)}?page=${pageNumber}&limit=10`;
+      console.log('🔗 Fetching URL:', url);
+
+      const res = await axios.get(url);
+      console.log('✅ Data response:', res.data);
+
+      const apiData = res.data.data;
+      const more = res.data.hasMore;
+
+      setData((prevData) => ({
+        ...prevData,
+        [activeTab]: pageNumber === 1 ? apiData : [...prevData[activeTab], ...apiData],
+      }));
+
+      setHasMore(more);
+      setPage(pageNumber);
+    } catch (err) {
+      console.log('❌ Lỗi tải dữ liệu:', err);
+    } finally {
+      if (pageNumber === 1) setLoading(false);
+      else setLoadingMore(false);
+    }
+  };
+
   const renderItem = ({ item }: { item: Item }) => (
     <View style={[styles.card, { backgroundColor: isDark ? '#111' : '#fff' }]}>
       <View>
-        <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
-
-        {/* Badge hiển thị rating */}
+        <Image source={{ uri: item.image_url_places }} style={styles.cardImage} />
         <View style={styles.ratingBadge}>
           <Ionicons name="star" size={12} color="#FFD700" style={{ marginRight: 2 }} />
-          <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+          <Text style={styles.ratingText}>{item.rating_places.toFixed(1)}</Text>
         </View>
       </View>
-
-      <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#000' }]} numberOfLines={1}>
-        {item.name}
-      </Text>
-      <Text style={[styles.cardDesc, { color: isDark ? '#aaa' : '#444' }]} numberOfLines={2}>
-        {item.description}
-      </Text>
+      <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#000' }]} numberOfLines={1}>{item.name_places}</Text>
+      <Text style={[styles.cardDesc, { color: isDark ? '#aaa' : '#444' }]} numberOfLines={2}>{item.description_places}</Text>
     </View>
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00f" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
@@ -138,13 +129,9 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => {
-              if (!isLoggedIn) {
-                router.push('/Login');
-              } else {
-                router.push('/messages/index');
-              }
-            }}
-          >
+              if (!isLoggedIn) router.push('/Login');
+              else router.push('/messages/index');
+            }}>
             <MaterialCommunityIcons name="facebook-messenger" size={24} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
         </View>
@@ -152,23 +139,35 @@ export default function HomeScreen() {
 
       <View style={[styles.tabContainer, { backgroundColor: isDark ? '#111' : 'black' }]}>
         {tabs.map((tab) => (
-          <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tabItem}>
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab}
-            </Text>
+          <TouchableOpacity
+            key={tab}
+            onPress={() => {
+              setActiveTab(tab);
+              setPage(1);
+              setHasMore(true);
+            }}
+            style={styles.tabItem}>
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
             {activeTab === tab && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
         ))}
       </View>
 
       <FlatList
-        data={tabData[activeTab]}
-        keyExtractor={(_, index) => index.toString()}
+        data={data[activeTab]}
+        keyExtractor={(item) => item.place_id}
         renderItem={renderItem}
         numColumns={2}
         contentContainerStyle={styles.gridContent}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         showsVerticalScrollIndicator={false}
+        onEndReachedThreshold={0.5}
+        onEndReached={() => {
+          if (!loadingMore && hasMore) {
+            fetchData(page + 1);
+          }
+        }}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color="#00f" /> : null}
       />
     </SafeAreaView>
   );
@@ -176,44 +175,21 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingHorizontal: 16,
-    paddingTop: 12, paddingBottom: 8,
-  },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   logo: { fontSize: 28, fontWeight: 'bold' },
   actions: { flexDirection: 'row', alignItems: 'center' },
   iconButton: { marginLeft: 16 },
-  tabContainer: {
-    flexDirection: 'row', justifyContent: 'space-around',
-    paddingVertical: 10,
-  },
+  tabContainer: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10 },
   tabItem: { alignItems: 'center' },
   tabText: { color: '#fff', fontSize: 16, fontWeight: '500' },
   tabTextActive: { fontWeight: 'bold' },
   tabUnderline: { marginTop: 4, width: 24, height: 3, backgroundColor: '#fff', borderRadius: 2 },
   gridContent: { paddingHorizontal: 8, paddingTop: 12 },
-  card: {
-    marginBottom: 12, borderRadius: 8,
-    overflow: 'hidden', width: width / 2 - 16, elevation: 2,
-  },
+  card: { marginBottom: 12, borderRadius: 8, overflow: 'hidden', width: width / 2 - 16, elevation: 2 },
   cardImage: { width: '100%', height: 120 },
   cardTitle: { fontSize: 14, fontWeight: 'bold', marginTop: 8, marginHorizontal: 8 },
   cardDesc: { fontSize: 12, marginHorizontal: 8, marginBottom: 8 },
-  ratingBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  ratingText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
+  ratingBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 12 },
+  ratingText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
 });

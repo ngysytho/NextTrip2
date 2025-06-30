@@ -96,8 +96,38 @@ public class UserService implements IUserService {
         return false;
     }
 
-    // ✅ New method: Return full User for login
+    @Override
+    public boolean verifyOtp(String email, String otp) {
+        logger.info("Xác minh OTP cho email: {}", email);
+        Optional<User> userOpt = userRepository.findByEmail_user(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (otp.equals(user.getVerifyToken_user())) {
+                user.setIsActive_user(true);
+                user.setVerifyToken_user(null);
+                user.setUpdatedAt_user(new Date());
+                userRepository.save(user);
+                logger.info("Tài khoản {} đã được xác minh thành công", user.getEmail_user());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean login(String email, String rawPassword) {
+        logger.info("Đăng nhập cho email: {}", email);
+        return userRepository.findByEmail_user(email)
+                .filter(user -> Boolean.TRUE.equals(user.getIsActive_user()) &&
+                        passwordEncoder.matches(rawPassword, user.getPassword_user()))
+                .isPresent();
+    }
+
+    /**
+     * ✅ New method to return User object for Controller authenticate usage
+     */
     public User authenticate(String email, String rawPassword) {
+        logger.info("Authenticate for email: {}", email);
         return userRepository.findByEmail_user(email)
                 .filter(user -> Boolean.TRUE.equals(user.getIsActive_user()) &&
                         passwordEncoder.matches(rawPassword, user.getPassword_user()))

@@ -9,7 +9,6 @@ public class UserResponse {
     private String username;
     private String displayName;
     private String email;
-
     private String birthDate;
     private String gender;
 
@@ -18,7 +17,6 @@ public class UserResponse {
         this.username = user.getUsername_user();
         this.displayName = user.getDisplayName_user();
         this.email = user.getEmail_user();
-
         this.birthDate = formatDate(user.getBirth_date_user());
         this.gender = user.getGender_user();
     }
@@ -28,7 +26,7 @@ public class UserResponse {
         if (birthDate == null) {
             return null;
         }
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // You can change the format
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(birthDate);
     }
 
@@ -36,9 +34,8 @@ public class UserResponse {
     public String getUsername() { return username; }
     public String getDisplayName() { return displayName; }
     public String getEmail() { return email; }
-
     public String getBirthDate() { return birthDate; }
     public String getGender() { return gender; }
 
-    // Optionally, you can add setters if required
+    // Optionally, add setters if needed
 }
