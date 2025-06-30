@@ -21,6 +21,12 @@ export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // ✅ thêm state để hiển thị mật khẩu
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +50,7 @@ export default function ChangePasswordScreen() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://192.168.0.119:8080/api/users/change-password', { // thay 192.168.x.x bằng IP LAN
+      const res = await fetch('http://192.168.0.119:8080/api/users/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,6 +77,35 @@ export default function ChangePasswordScreen() {
     }
   };
 
+  const renderPasswordInput = (
+    label: string,
+    value: string,
+    setValue: (v: string) => void,
+    show: boolean,
+    setShow: (v: boolean) => void,
+    placeholder: string
+  ) => (
+    <>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={value}
+          onChangeText={setValue}
+          placeholder={placeholder}
+          secureTextEntry={!show}
+          style={styles.input}
+        />
+        <TouchableOpacity onPress={() => setShow(!show)}>
+          <Ionicons
+            name={show ? 'eye-off-outline' : 'eye-outline'}
+            size={20}
+            color="#000"
+          />
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -80,32 +115,32 @@ export default function ChangePasswordScreen() {
         <Text style={styles.title}>Đổi mật khẩu</Text>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Mật khẩu hiện tại</Text>
-          <TextInput
-            value={oldPassword}
-            onChangeText={setOldPassword}
-            placeholder="Nhập mật khẩu cũ"
-            secureTextEntry
-            style={styles.input}
-          />
+          {renderPasswordInput(
+            'Mật khẩu hiện tại',
+            oldPassword,
+            setOldPassword,
+            showOld,
+            setShowOld,
+            'Nhập mật khẩu cũ'
+          )}
 
-          <Text style={styles.label}>Mật khẩu mới</Text>
-          <TextInput
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Nhập mật khẩu mới"
-            secureTextEntry
-            style={styles.input}
-          />
+          {renderPasswordInput(
+            'Mật khẩu mới',
+            newPassword,
+            setNewPassword,
+            showNew,
+            setShowNew,
+            'Nhập mật khẩu mới'
+          )}
 
-          <Text style={styles.label}>Xác nhận mật khẩu mới</Text>
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Nhập lại mật khẩu mới"
-            secureTextEntry
-            style={styles.input}
-          />
+          {renderPasswordInput(
+            'Xác nhận mật khẩu mới',
+            confirmPassword,
+            setConfirmPassword,
+            showConfirm,
+            setShowConfirm,
+            'Nhập lại mật khẩu mới'
+          )}
         </View>
 
         <TouchableOpacity
@@ -125,7 +160,7 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // trắng
+    backgroundColor: '#FFFFFF',
   },
   inner: {
     flex: 1,
@@ -135,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 24,
-    color: '#000000', // đen
+    color: '#000000',
   },
   inputGroup: {
     marginBottom: 24,
@@ -144,26 +179,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 6,
-    color: '#000000', // đen
+    color: '#000000',
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 8,
-    padding: 12,
+    alignItems: 'center',
+    paddingHorizontal: 12,
     marginBottom: 16,
-    color: '#000000', // đen
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    color: '#000000',
   },
   button: {
-    backgroundColor: '#000000', // đen
+    backgroundColor: '#000000',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF', // trắng
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
 });
-// This code defines a ChangePasswordScreen component that allows users to change their password.

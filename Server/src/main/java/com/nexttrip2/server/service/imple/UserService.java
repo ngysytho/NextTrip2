@@ -1,5 +1,6 @@
 package com.nexttrip2.server.service.imple;
 
+import com.nexttrip2.server.dto.UpdateProfileRequestDTO; // ✅ IMPORT DTO
 import com.nexttrip2.server.dto.ChangePasswordRequestDTO; // ✅ IMPORT DTO
 import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.repository.UserRepository;
@@ -7,6 +8,7 @@ import com.nexttrip2.server.responses.UserResponse;
 import com.nexttrip2.server.service.IUserService;
 
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
 
@@ -168,6 +170,33 @@ public class UserService implements IUserService {
         userRepository.save(user);
         logger.info("Đổi mật khẩu thành công cho email: {}", user.getEmail_user());
     }
+
+
+    public void updateProfile(UpdateProfileRequestDTO request) {
+        Optional<User> userOpt = userRepository.findByEmail_user(request.getEmail());
+
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy người dùng với email: " + request.getEmail());
+        }
+
+        User user = userOpt.get();
+
+        user.setDisplayName_user(request.getDisplayName());
+        user.setUsername_user(request.getUsername());
+        try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date birthDate = sdf.parse(request.getBirth());
+                user.setBirth_date_user(birthDate);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Ngày sinh không hợp lệ. Định dạng: yyyy-MM-dd");
+        }
+        user.setGender_user(request.getGender());
+        user.setUpdatedAt_user(new Date());
+
+        userRepository.save(user);
+        logger.info("Cập nhật thông tin thành công cho email: {}", user.getEmail_user());
+    }
+
 
     private String generateOtp() {
         return String.format("%06d", new SecureRandom().nextInt(999999));

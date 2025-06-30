@@ -7,4 +7,5 @@ export const STORAGE_KEYS = {
     GENDER: 'gender',
     CREATED_AT: 'createdAt',
     UPDATED_AT: 'updatedAt',
+    LAST_UPDATED_PROFILE: 'lastUpdatedProfile',
 };

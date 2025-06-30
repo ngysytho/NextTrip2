@@ -221,7 +221,7 @@ export default function MoreScreen() {
                   return;
                 }
                 setProfileModalVisible(false);
-                router.push('/settings/UpdateProfile');
+                router.push('../settings/UpdateProfile');
               }}
             >
               <Text style={styles.buttonText}>Cập nhật thông tin cá nhân</Text>

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.nexttrip2.server.dto.UpdateProfileRequestDTO;
 import com.nexttrip2.server.dto.ChangePasswordRequestDTO;
 import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.responses.UserResponse;
@@ -109,4 +110,18 @@ public class UserController {
                     .body("Lỗi server: " + ex.getMessage());
         }
     }
+
+    @PostMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequestDTO request) {
+        try {
+            userService.updateProfile(request);
+            return ResponseEntity.ok("Cập nhật thông tin thành công");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi server: " + ex.getMessage());
+        }
+    }
+
 }

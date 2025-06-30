@@ -21,7 +21,7 @@ public class PlaceController {
     public ResponseEntity<Map<String, Object>> getByTypeWithPagination(
             @PathVariable String type,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit
+            @RequestParam(defaultValue = "50") int limit
     ) {
         System.out.println("API CALLED with type: " + type + ", page: " + page + ", limit: " + limit);
         Map<String, Object> result = placeService.getPlacesByTypeWithPagination(type, page, limit);
