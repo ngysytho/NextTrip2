@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.*;
 
 import com.nexttrip2.server.model.User;
 import com.nexttrip2.server.responses.UserResponse;
+import com.nexttrip2.server.responses.LoginResponse;
 import com.nexttrip2.server.service.imple.EmailService;
 import com.nexttrip2.server.service.imple.UserService;
+import com.nexttrip2.server.utils.JwtUtil;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -19,10 +21,12 @@ public class UserController {
 
     private final UserService userService;
     private final EmailService emailService;
+    private final JwtUtil jwtUtil;
 
-    public UserController(UserService userService, EmailService emailService) {
+    public UserController(UserService userService, EmailService emailService, JwtUtil jwtUtil) {
         this.userService = userService;
         this.emailService = emailService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
@@ -41,8 +45,16 @@ public class UserController {
         try {
             User authenticatedUser = userService.authenticate(user.getEmail_user(), user.getPassword_user());
             if (authenticatedUser != null) {
+                // Tạo JWT token
+                String token = jwtUtil.generateToken(authenticatedUser.getEmail_user());
+
+                // Tạo UserResponse
                 UserResponse userResponse = new UserResponse(authenticatedUser);
-                return ResponseEntity.ok(userResponse);
+
+                // Trả về LoginResponse
+                LoginResponse loginResponse = new LoginResponse(token, userResponse);
+
+                return ResponseEntity.ok(loginResponse);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Sai email hoặc mật khẩu hoặc chưa xác minh.");
@@ -87,5 +99,4 @@ public class UserController {
                     .body("Lỗi server: " + ex.getMessage());
         }
     }
-
 }

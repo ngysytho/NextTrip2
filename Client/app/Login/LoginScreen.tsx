@@ -16,18 +16,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppTheme } from '../../context/ThemeContext';
 import { STORAGE_KEYS } from '../../constants/storageKeys';
 
+type LoginResponse = {
+  token: string;
+  user: {
+    displayName: string;
+    username: string;
+    email: string;
+    birthDate: string;
+    gender: string;
+  };
+};
+
 export default function LoginScreen() {
-  const [phoneOrEmail, setPhoneOrEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const router = useRouter();
   const { theme } = useAppTheme();
   const isDark = theme === 'dark';
 
   const handleLogin = async () => {
-    if (!phoneOrEmail || !password) {
+    if (!email || !password) {
       Alert.alert('Thông báo', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
@@ -35,49 +46,33 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      // Gửi yêu cầu đăng nhập
       const loginRes = await fetch('http://192.168.0.119:8080/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email_user: phoneOrEmail.trim(),
+          email_user: email.trim(),
           password_user: password,
         }),
       });
 
-      const loginText = await loginRes.text();
-
       if (!loginRes.ok) {
-        Alert.alert('Lỗi đăng nhập', loginText);
+        const errorText = await loginRes.text();
+        Alert.alert('Lỗi đăng nhập', errorText);
         return;
       }
 
-      // Lưu token
-      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, loginText);
+      const loginData: LoginResponse = await loginRes.json();
+      console.log('✅ loginData:', loginData);
 
-      // Lấy thông tin người dùng
-      const userInfoRes = await fetch(
-        `http://192.168.0.119:8080/api/users/info?email=${phoneOrEmail.trim()}`
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, loginData.token);
 
-      if (!userInfoRes.ok) {
-        const errorText = await userInfoRes.text();
-        console.error('❌ Lỗi lấy thông tin người dùng:', errorText);
-        throw new Error(errorText);
-      }
-
-      const userData = await userInfoRes.json();
-      console.log('✅ userData:', userData);
-
-      // Lưu thông tin người dùng
+      const user = loginData.user;
       await AsyncStorage.multiSet([
-        [STORAGE_KEYS.DISPLAY_NAME, userData.displayName_user ?? ''],
-        [STORAGE_KEYS.USERNAME, userData.username_user ?? ''],
-        [STORAGE_KEYS.EMAIL, userData.email_user ?? ''],
-        [STORAGE_KEYS.BIRTH_DATE, userData.birth_date_user ?? ''],
-        [STORAGE_KEYS.GENDER, String(userData.gender_user ?? '')],
-        [STORAGE_KEYS.CREATED_AT, userData.createdAt ?? ''],
-        [STORAGE_KEYS.UPDATED_AT, userData.updatedAt ?? ''],
+        [STORAGE_KEYS.DISPLAY_NAME, user.displayName ?? ''],
+        [STORAGE_KEYS.USERNAME, user.username ?? ''],
+        [STORAGE_KEYS.EMAIL, user.email ?? ''],
+        [STORAGE_KEYS.BIRTH_DATE, user.birthDate ?? ''],
+        [STORAGE_KEYS.GENDER, String(user.gender ?? '')],
       ]);
 
       Alert.alert('Thành công', '🎉 Đăng nhập thành công!');
@@ -100,11 +95,12 @@ export default function LoginScreen() {
 
         <View style={styles.inputBox}>
           <TextInput
-            value={phoneOrEmail}
-            onChangeText={setPhoneOrEmail}
-            placeholder="Số điện thoại hoặc Gmail"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
             placeholderTextColor="#888"
             autoCapitalize="none"
+            keyboardType="email-address"
             style={[
               styles.input,
               {
@@ -145,8 +141,9 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.loginButton, { backgroundColor: isDark ? '#007AFF' : '#000' }]}
             onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginText}>Đăng nhập</Text>
+            <Text style={styles.loginText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -165,9 +162,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
   container: {
     flex: 1,
     padding: 24,
@@ -179,9 +174,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
   },
-  inputBox: {
-    gap: 12,
-  },
+  inputBox: { gap: 12 },
   input: {
     borderWidth: 1,
     borderRadius: 10,
@@ -225,7 +218,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  separator: {
-    width: 20,
-  },
+  separator: { width: 20 },
 });

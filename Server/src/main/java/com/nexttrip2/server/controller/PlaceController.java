@@ -23,7 +23,9 @@ public class PlaceController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
     ) {
+        System.out.println("API CALLED with type: " + type + ", page: " + page + ", limit: " + limit);
         Map<String, Object> result = placeService.getPlacesByTypeWithPagination(type, page, limit);
         return ResponseEntity.ok(result);
     }
+
 }
