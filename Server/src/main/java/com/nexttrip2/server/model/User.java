@@ -10,47 +10,25 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class User {
     
     private String id;
-
     private String userId = UUID.randomUUID().toString();
-
-    
     private String email_user;
-
-    
     private String phone_user;
-
-    
     private String password_user;
-
-    
     private String username_user;
-
-    
     private String displayName_user;
-
-    
     private Date birth_date_user;
-
-    
     private String verifyToken_user;
-
-    
     private Boolean isActive_user = false;
-
-    
     private Date createdAt_user = new Date();
-
-    
     private Date updatedAt_user = new Date();
-
-    
     private String gender_user;
-
-    
     private String avatar_user = "https://i.ibb.co/m5sdf5p/default-avatar.png";
 
-    // Getters and setters...
+    // 🔥 Thêm field OTP
+    private String resetOtp;
+    private Date otpExpiryTime;
 
+    // Getters and setters...
     public String getId() { return id; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
@@ -78,4 +56,11 @@ public class User {
     public void setGender_user(String gender_user) { this.gender_user = gender_user; }
     public String getAvatar_user() { return avatar_user; }
     public void setAvatar_user(String avatar_user) { this.avatar_user = avatar_user; }
+
+    // 🔥 Getter & Setter cho resetOtp
+    public String getResetOtp() { return resetOtp; }
+    public void setResetOtp(String resetOtp) { this.resetOtp = resetOtp; }
+
+    public Date getOtpExpiryTime() { return otpExpiryTime; }
+    public void setOtpExpiryTime(Date otpExpiryTime) { this.otpExpiryTime = otpExpiryTime; }
 }

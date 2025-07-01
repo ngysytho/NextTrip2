@@ -1,20 +1,16 @@
 package com.nexttrip2.server.controller;
 
-import java.util.Map;
-import java.util.Random;
+import com.nexttrip2.server.dto.*;
+import com.nexttrip2.server.model.User;
+import com.nexttrip2.server.responses.*;
+import com.nexttrip2.server.service.imple.*;
+import com.nexttrip2.server.utils.JwtUtil;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.nexttrip2.server.dto.UpdateProfileRequestDTO;
-import com.nexttrip2.server.dto.ChangePasswordRequestDTO;
-import com.nexttrip2.server.model.User;
-import com.nexttrip2.server.responses.UserResponse;
-import com.nexttrip2.server.responses.LoginResponse;
-import com.nexttrip2.server.service.imple.EmailService;
-import com.nexttrip2.server.service.imple.UserService;
-import com.nexttrip2.server.utils.JwtUtil;
+import java.util.Random;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -37,7 +33,6 @@ public class UserController {
             userService.register(user);
             return ResponseEntity.ok("Đăng ký thành công");
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi đăng ký: " + e.getMessage());
         }
@@ -50,14 +45,12 @@ public class UserController {
             if (authenticatedUser != null) {
                 String token = jwtUtil.generateToken(authenticatedUser.getEmail_user());
                 UserResponse userResponse = new UserResponse(authenticatedUser);
-                LoginResponse loginResponse = new LoginResponse(token, userResponse);
-                return ResponseEntity.ok(loginResponse);
+                return ResponseEntity.ok(new LoginResponse(token, userResponse));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Sai email hoặc mật khẩu hoặc chưa xác minh.");
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi server: " + e.getMessage());
         }
@@ -65,22 +58,17 @@ public class UserController {
 
     @PostMapping("/send-verification")
     public String sendVerification(@RequestParam String email) {
-        String code = String.format("%06d", new Random().nextInt(999999));
+        String code = String.format("%06d", new Random().nextInt(1000000));
         emailService.sendVerificationCode(email, code);
         return "Đã gửi mã xác nhận đến email: " + email;
     }
 
     @PostMapping("/verify-code")
-    public ResponseEntity<String> verifyCode(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
-        String code = payload.get("code");
-
-        boolean verified = userService.verifyCode(email, code);
-        if (verified) {
-            return ResponseEntity.ok("Xác minh thành công!");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sai mã hoặc đã hết hạn.");
-        }
+    public ResponseEntity<String> verifyCode(@RequestBody VerifyCodeRequestDTO request) {
+        boolean verified = userService.verifyCode(request.getEmail(), request.getCode());
+        return verified
+                ? ResponseEntity.ok("Xác minh thành công!")
+                : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sai mã hoặc đã hết hạn.");
     }
 
     @GetMapping("/info")
@@ -91,9 +79,6 @@ public class UserController {
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Không tìm thấy người dùng với email: " + email);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Lỗi server: " + ex.getMessage());
         }
     }
 
@@ -105,9 +90,7 @@ public class UserController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Lỗi server: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi server: " + ex.getMessage());
         }
     }
 
@@ -119,9 +102,33 @@ public class UserController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         } catch (Exception ex) {
-            ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi server: " + ex.getMessage());
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        System.out.println("🔥 Received forgot-password request with email: " + request.getEmail());
+        try {
+            userService.sendResetOtp(request.getEmail());
+            return ResponseEntity.ok("Đã gửi OTP về email: " + request.getEmail());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi server: " + ex.getMessage());
+        }
+    }
+
+    @PostMapping("/verify-reset-password")
+    public ResponseEntity<?> verifyResetPassword(@RequestBody VerifyResetPasswordRequestDTO request) {
+        try {
+            userService.verifyAndResetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+            return ResponseEntity.ok("Đổi mật khẩu thành công.");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi server: " + ex.getMessage());
+        }
+    }
 }
