@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router'; // ✅ import Stack
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppTheme } from '../../context/ThemeContext';
 import { STORAGE_KEYS } from '../../constants/storageKeys';
@@ -86,78 +86,81 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: isDark ? '#000' : '#fff' }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-      >
-        <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>Đăng nhập</Text>
+    <>
+      <Stack.Screen options={{ headerShown: false }} /> {/* ✅ Ẩn header */}
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.container}
+        >
+          <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>Đăng nhập</Text>
 
-        <View style={styles.inputBox}>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            placeholderTextColor="#888"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            style={[
-              styles.input,
-              {
-                color: isDark ? '#fff' : '#000',
-                backgroundColor: isDark ? '#1a1a1a' : '#F9F9F9',
-                borderColor: isDark ? '#444' : '#ccc',
-              },
-            ]}
-          />
-
-          <View
-            style={[
-              styles.passwordWrapper,
-              {
-                backgroundColor: isDark ? '#1a1a1a' : '#F9F9F9',
-                borderColor: isDark ? '#444' : '#ccc',
-              },
-            ]}
-          >
+          <View style={styles.inputBox}>
             <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Mật khẩu"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
               placeholderTextColor="#888"
-              secureTextEntry={!showPassword}
-              style={[styles.passwordInput, { color: isDark ? '#fff' : '#000' }]}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              style={[
+                styles.input,
+                {
+                  color: isDark ? '#fff' : '#000',
+                  backgroundColor: isDark ? '#1a1a1a' : '#F9F9F9',
+                  borderColor: isDark ? '#444' : '#ccc',
+                },
+              ]}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons
-                name={showPassword ? 'eye-off' : 'eye'}
-                size={22}
-                color={isDark ? '#ccc' : '#888'}
-                style={{ marginLeft: 8 }}
+
+            <View
+              style={[
+                styles.passwordWrapper,
+                {
+                  backgroundColor: isDark ? '#1a1a1a' : '#F9F9F9',
+                  borderColor: isDark ? '#444' : '#ccc',
+                },
+              ]}
+            >
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Mật khẩu"
+                placeholderTextColor="#888"
+                secureTextEntry={!showPassword}
+                style={[styles.passwordInput, { color: isDark ? '#fff' : '#000' }]}
               />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={22}
+                  color={isDark ? '#ccc' : '#888'}
+                  style={{ marginLeft: 8 }}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.loginButton, { backgroundColor: isDark ? '#007AFF' : '#000' }]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.loginText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.loginButton, { backgroundColor: isDark ? '#007AFF' : '#000' }]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.loginText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.footerRow}>
-          <TouchableOpacity>
-            <Text style={[styles.footerText, { color: '#007AFF' }]}>Quên mật khẩu?</Text>
-          </TouchableOpacity>
-          <View style={styles.separator} />
-          <TouchableOpacity onPress={() => router.push('/Login/signup')}>
-            <Text style={[styles.footerText, { color: '#007AFF' }]}>Đăng ký</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          <View style={styles.footerRow}>
+            <TouchableOpacity onPress={() => router.push('/Login/ForgotPassword')}>
+              <Text style={[styles.footerText, { color: '#007AFF' }]}>Quên mật khẩu?</Text>
+            </TouchableOpacity>
+            <View style={styles.separator} />
+            <TouchableOpacity onPress={() => router.push('/Login/SignupScreen')}>
+              <Text style={[styles.footerText, { color: '#007AFF' }]}>Đăng ký</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </>
   );
 }
 

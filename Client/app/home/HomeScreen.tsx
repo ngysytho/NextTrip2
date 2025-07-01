@@ -129,7 +129,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => {
-              if (!isLoggedIn) router.push('/Login');
+              if (!isLoggedIn) router.push('/Login/LoginScreen');
               else router.push('/messages/index');
             }}>
             <MaterialCommunityIcons name="facebook-messenger" size={24} color={isDark ? '#fff' : '#000'} />

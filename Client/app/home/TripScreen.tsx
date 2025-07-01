@@ -156,7 +156,7 @@ export default function TripScreen() {
         <Text style={{ textAlign: 'center', color: isDark ? '#fff' : '#000', marginBottom: 12 }}>
           Vui lòng đăng nhập để xem các chuyến đi của bạn.
         </Text>
-        <TouchableOpacity onPress={() => router.push('/Login')} style={styles.loginBtn}>
+        <TouchableOpacity onPress={() => router.push('/Login/LoginScreen')} style={styles.loginBtn}>
           <Ionicons name="log-in-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
           <Text style={{ color: '#fff' }}>Đăng nhập</Text>
         </TouchableOpacity>
