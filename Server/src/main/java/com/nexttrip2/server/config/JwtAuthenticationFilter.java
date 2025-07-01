@@ -20,7 +20,6 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
     private final JwtUtil jwtUtil;
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
@@ -28,25 +27,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        logger.info("➡️ JwtFilter checking path: {}", path);
+
+        // ✅ Skip filter cho các route public
+        return path.startsWith("/api/users/login") ||
+               path.startsWith("/api/users/register") ||
+               path.startsWith("/api/users/send-verification") ||
+               path.startsWith("/api/users/verify-code") ||
+               path.startsWith("/api/users/forgot-password") ||
+               path.startsWith("/api/users/verify-reset-password") ||
+               path.startsWith("/api/places/");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
-        String path = request.getRequestURI();
-
-        // ✅ Skip filter cho các route public
-        if (path.startsWith("/api/users/login") ||
-            path.startsWith("/api/users/register") ||
-            path.startsWith("/api/users/send-verification") ||
-            path.startsWith("/api/users/verify-code") ||
-            path.startsWith("/api/users/forgot-password") ||
-            path.startsWith("/api/users/verify-reset-password") ||
-            path.startsWith("/api/places/")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         final String authHeader = request.getHeader("Authorization");
         String email = null;

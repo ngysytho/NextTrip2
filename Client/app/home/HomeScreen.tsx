@@ -28,7 +28,6 @@ type Item = {
   description_places: string;
   image_url_places: string;
   rating_places: number;
-  type_places: string;
 };
 
 export default function HomeScreen() {
@@ -74,8 +73,6 @@ export default function HomeScreen() {
       console.log('🔗 Fetching URL:', url);
 
       const res = await axios.get(url);
-
-
       const apiData = res.data.data;
       const more = res.data.hasMore;
 
@@ -103,8 +100,13 @@ export default function HomeScreen() {
           <Text style={styles.ratingText}>{item.rating_places.toFixed(1)}</Text>
         </View>
       </View>
-      <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#000' }]} numberOfLines={1}>{item.name_places}</Text>
-      <Text style={[styles.cardDesc, { color: isDark ? '#aaa' : '#444' }]} numberOfLines={2}>{item.description_places}</Text>
+      <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#000' }]} numberOfLines={1}>
+        {item.name_places}
+      </Text>
+      <Text style={[styles.cardDesc, { color: isDark ? '#aaa' : '#444' }]} numberOfLines={2}>
+        {item.description_places}
+      </Text>
+      {/* ✅ Bỏ địa chỉ, số điện thoại, open/close, group để UI clean */}
     </View>
   );
 

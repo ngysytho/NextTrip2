@@ -4,11 +4,13 @@ import com.nexttrip2.server.service.PlaceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/places")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // ✅ CORS config tạm thời, nên cấu hình cụ thể domain production
 public class PlaceController {
 
     private final PlaceService placeService;
@@ -17,15 +19,18 @@ public class PlaceController {
         this.placeService = placeService;
     }
 
-    @GetMapping("/category/{type}")
-    public ResponseEntity<Map<String, Object>> getByTypeWithPagination(
-            @PathVariable String type,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "50") int limit
-    ) {
-        System.out.println("API CALLED with type: " + type + ", page: " + page + ", limit: " + limit);
-        Map<String, Object> result = placeService.getPlacesByTypeWithPagination(type, page, limit);
-        return ResponseEntity.ok(result);
-    }
+    @GetMapping("/category/{groupType}")
+public ResponseEntity<Map<String, Object>> getByGroupTypeWithPagination(
+        @PathVariable String groupType,
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "50") int limit
+) {
+    groupType = URLDecoder.decode(groupType, StandardCharsets.UTF_8);
+    
+    System.out.println("➡️ API CALLED with groupType: " + groupType + ", page: " + page + ", limit: " + limit);
+
+    Map<String, Object> result = placeService.getPlacesByGroupTypeWithPagination(groupType, page, limit);
+    return ResponseEntity.ok(result);
+}
 
 }

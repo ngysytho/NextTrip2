@@ -1,70 +1,67 @@
 package com.nexttrip2.server.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.SignatureException;
-
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    // 🔑 Secret key đủ dài cho HS512 (~64 bytes)
-    private final String SECRET_KEY = "mySuperLongSecretKeyThatIsAtLeast64BytesLongForHS512AlgorithmUsage1234567890!";
+    // ✅ Secret key dùng HS256 (minimum 256-bit = 32-char string)
+    private final String SECRET = "YourSuperSecretKeyForJwtGeneration123!";
+    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24 hours
 
-    /**
-     * ✅ Generate token với email
-     */
-    public String generateToken(String email) {
-        long expirationTime = 1000 * 60 * 60 * 24; // 24 hours
+    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
+    // ✅ Generate token
+    public String generateToken(String subject) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(subject)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()), SignatureAlgorithm.HS512)
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /**
-     * ✅ Validate token hợp lệ hay không
-     */
+    // ✅ Validate token
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
-                    .build()
-                    .parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (ExpiredJwtException ex) {
-            System.out.println("Token đã hết hạn: " + ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
-            System.out.println("Token không được hỗ trợ: " + ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            System.out.println("Token không hợp lệ: " + ex.getMessage());
-        } catch (SignatureException ex) {
-            System.out.println("Chữ ký token không đúng: " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Token trống: " + ex.getMessage());
+        } catch (ExpiredJwtException e) {
+            System.out.println("❌ Token expired: " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            System.out.println("❌ Unsupported token: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            System.out.println("❌ Malformed token: " + e.getMessage());
+        } catch (SignatureException e) {
+            System.out.println("❌ Invalid signature: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Illegal argument token: " + e.getMessage());
         }
         return false;
     }
 
-    /**
-     * ✅ Lấy claims (payload data) từ token
-     */
+    // ✅ Get claims from token
     public Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    // ✅ Get subject (email or username) from token
+    public String getSubject(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    // ✅ Check if token is expired
+    public boolean isTokenExpired(String token) {
+        Date expiration = getClaims(token).getExpiration();
+        return expiration.before(new Date());
     }
 }
