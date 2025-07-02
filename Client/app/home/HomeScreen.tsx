@@ -69,7 +69,7 @@ export default function HomeScreen() {
     else setLoadingMore(true);
 
     try {
-      const url = `http://192.168.0.119:8080/api/places/category/${encodeURIComponent(activeTab)}?page=${pageNumber}&limit=10`;
+      const url = `http://192.168.1.6:8080/api/places/category/${encodeURIComponent(activeTab)}?page=${pageNumber}&limit=10`;
       console.log('🔗 Fetching URL:', url);
 
       const res = await axios.get(url);
@@ -92,7 +92,20 @@ export default function HomeScreen() {
   };
 
   const renderItem = ({ item }: { item: Item }) => (
-    <View style={[styles.card, { backgroundColor: isDark ? '#111' : '#fff' }]}>
+    <TouchableOpacity
+      onPress={() => {
+        router.push({
+          pathname: '/Items/PlaceDetailScreen',
+          params: {
+            place_id: item.place_id,
+            name_places: item.name_places,
+            description_places: item.description_places,
+            image_url_places: item.image_url_places,
+            rating_places: item.rating_places.toString(),
+          },
+        });
+      }}
+      style={[styles.card, { backgroundColor: isDark ? '#111' : '#fff' }]}>
       <View>
         <Image source={{ uri: item.image_url_places }} style={styles.cardImage} />
         <View style={styles.ratingBadge}>
@@ -106,8 +119,7 @@ export default function HomeScreen() {
       <Text style={[styles.cardDesc, { color: isDark ? '#aaa' : '#444' }]} numberOfLines={2}>
         {item.description_places}
       </Text>
-      {/* ✅ Bỏ địa chỉ, số điện thoại, open/close, group để UI clean */}
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {

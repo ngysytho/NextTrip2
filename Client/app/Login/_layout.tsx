@@ -4,9 +4,7 @@ export default function Layout() {
     return (
         <Stack
         screenOptions={{
-            headerBackTitle: 'Back',
-            headerTintColor: '#000',
-            headerTitle: '',
+            headerShown: false, // 🔑 Ẩn toàn bộ header
         }}
         />
     );

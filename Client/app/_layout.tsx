@@ -1,17 +1,15 @@
 import { Stack } from 'expo-router';
-import { ThemeProvider, useAppTheme } from '../context/ThemeContext';
+import { ThemeProvider } from '../context/ThemeContext';
+import { AuthProvider } from '../context/AuthContext';
 
 function InnerLayout() {
-    const { theme } = useAppTheme();
-    const isDark = theme === 'dark';
-
     return (
         <Stack
             screenOptions={{
                 headerStyle: {
-                    backgroundColor: isDark ? '#000' : '#fff',
+                    backgroundColor: '#fff',
                 },
-                headerTintColor: isDark ? '#fff' : '#000',
+                headerTintColor: '#000',
                 headerBackTitle: 'Back',
                 headerTitle: '',
             }}
@@ -28,7 +26,9 @@ function InnerLayout() {
 export default function Layout() {
     return (
         <ThemeProvider>
-            <InnerLayout />
+            <AuthProvider>
+                <InnerLayout />
+            </AuthProvider>
         </ThemeProvider>
     );
 }

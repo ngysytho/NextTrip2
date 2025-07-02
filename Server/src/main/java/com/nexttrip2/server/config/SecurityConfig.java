@@ -35,17 +35,9 @@ public class SecurityConfig {
             .cors().and()
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/register").permitAll()
-                .requestMatchers("/api/users/login").permitAll()
-                .requestMatchers("/api/users/send-otp").permitAll()
-                .requestMatchers("/api/users/verify-otp").permitAll()
-                .requestMatchers("/api/users/send-verification").permitAll()
-                .requestMatchers("/api/users/verify-code").permitAll()
-                .requestMatchers("/api/users/change-password").permitAll()
-                .requestMatchers("/api/users/update-profile").permitAll()
-                .requestMatchers("/api/users/forgot-password").permitAll()
-                .requestMatchers("/api/users/verify-reset-password").permitAll()
+                .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/places/**").permitAll()
+                .requestMatchers("/api/reviews/**").permitAll() // ✅ Cho phép reviews public
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -56,10 +48,9 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // 🔧 Replace IP below with your Expo or React Native dev server address
         config.setAllowedOrigins(Arrays.asList(
             "http://localhost:19006",
-            "http://192.168.0.119:19006"
+            "http://192.168.1.6:19006" // Thay bằng IP Expo LAN của bạn
         ));
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");

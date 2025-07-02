@@ -32,13 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         logger.info("➡️ JwtFilter checking path: {}", path);
 
         // ✅ Skip filter cho các route public
-        return path.startsWith("/api/users/login") ||
-               path.startsWith("/api/users/register") ||
-               path.startsWith("/api/users/send-verification") ||
-               path.startsWith("/api/users/verify-code") ||
-               path.startsWith("/api/users/forgot-password") ||
-               path.startsWith("/api/users/verify-reset-password") ||
-               path.startsWith("/api/places/");
+        return path.startsWith("/api/users/") ||
+               path.startsWith("/api/places/") ||
+               path.startsWith("/api/reviews/");
     }
 
     @Override
