@@ -1,6 +1,7 @@
 package com.nexttrip2.server.controller;
 
 import com.nexttrip2.server.dto.CartItemRequestDTO;
+import com.nexttrip2.server.dto.DeleteCartItemsRequest;
 import com.nexttrip2.server.model.Cart;
 import com.nexttrip2.server.model.CartItem;
 import com.nexttrip2.server.responses.CartResponse;
@@ -26,7 +27,14 @@ public class CartController {
 
     @PostMapping("/{userId}/add")
     public CartResponse addToCart(@PathVariable String userId, @RequestBody CartItemRequestDTO request) {
-        CartItem item = new CartItem(request.getPlaceId(), request.getName(), request.getPrice());
+        CartItem item = new CartItem(
+            request.getPlaceId(),
+            request.getName(),
+            request.getPrice(),
+            request.getImageUrl(),
+            request.getDescription(),
+            request.getAddress()
+        );
         Cart cart = cartService.addToCart(userId, item);
         return new CartResponse(cart.getUserId(), cart.getItems());
     }
@@ -35,5 +43,11 @@ public class CartController {
     public String clearCart(@PathVariable String userId) {
         cartService.clearCart(userId);
         return "Đã xoá giỏ hàng";
+    }
+
+    @PostMapping("/{userId}/remove-multiple")
+    public String removeMultipleItems(@PathVariable String userId, @RequestBody DeleteCartItemsRequest request) {
+        cartService.removeMultipleItems(userId, request.getPlaceIds());
+        return "Đã xoá các mục đã chọn";
     }
 }

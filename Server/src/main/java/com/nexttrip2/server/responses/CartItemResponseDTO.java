@@ -1,6 +1,6 @@
-package com.nexttrip2.server.model;
+package com.nexttrip2.server.responses;
 
-public class CartItem {
+public class CartItemResponseDTO {
 
     private String placeId;
     private String name;
@@ -9,9 +9,9 @@ public class CartItem {
     private String description;
     private String address;
 
-    public CartItem() {}
+    public CartItemResponseDTO() {}
 
-    public CartItem(String placeId, String name, int price, String imageUrl, String description, String address) {
+    public CartItemResponseDTO(String placeId, String name, int price, String imageUrl, String description, String address) {
         this.placeId = placeId;
         this.name = name;
         this.price = price;
@@ -20,6 +20,7 @@ public class CartItem {
         this.address = address;
     }
 
+    // getters & setters
     public String getPlaceId() { return placeId; }
     public void setPlaceId(String placeId) { this.placeId = placeId; }
 

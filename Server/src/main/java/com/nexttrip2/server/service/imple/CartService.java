@@ -7,6 +7,7 @@ import com.nexttrip2.server.service.ICartService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CartService implements ICartService {
@@ -44,6 +45,13 @@ public class CartService implements ICartService {
     public void clearCart(String userId) {
         Cart cart = getCartByUserId(userId);
         cart.getItems().clear();
+        cartRepository.save(cart);
+    }
+
+    @Override
+    public void removeMultipleItems(String userId, List<String> placeIds) {
+        Cart cart = getCartByUserId(userId);
+        cart.getItems().removeIf(item -> placeIds.contains(item.getPlaceId()));
         cartRepository.save(cart);
     }
 }
