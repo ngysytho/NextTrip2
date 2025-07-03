@@ -110,6 +110,9 @@ export default function PlaceDetailScreen() {
         placeId: place?.place_id,
         name: place?.name_places,
         price: place?.ticket_price_places ?? 0,
+        imageUrl: place?.image_url_places ?? "",
+        description: place?.description_places ?? "",
+        address: place?.address_places ?? "",
       });
       Alert.alert('✅', 'Đã thêm vào giỏ hàng');
       animateCart();
