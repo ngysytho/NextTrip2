@@ -170,17 +170,14 @@ export default function PlaceDetailScreen() {
         <View style={styles.contentBox}>
           <Text style={styles.title}>{place.name_places}</Text>
 
-          <TouchableOpacity style={styles.addToCartButton} onPress={addToCart}>
-            <Ionicons name="cart" size={20} color="#fff" />
-            <Text style={{ color: '#fff', marginLeft: 8 }}>Thêm vào giỏ hàng</Text>
-          </TouchableOpacity>
+          {/* ⭐ Miêu tả địa điểm */}
+          <Text style={styles.description}>{place.description_places ?? 'Chưa có miêu tả.'}</Text>
 
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={18} color="#555" />
             <Text style={styles.infoText}>{place.address_places}</Text>
           </View>
 
-          {/* ⭐ Giờ mở cửa */}
           <View style={styles.infoRow}>
             <Ionicons name="time-outline" size={18} color="#555" />
             <Text style={styles.infoText}>
@@ -199,7 +196,6 @@ export default function PlaceDetailScreen() {
             </Text>
           </View>
 
-          {/* ⭐ Map */}
           <MapView
             style={styles.map}
             provider={PROVIDER_GOOGLE}
@@ -266,7 +262,6 @@ export default function PlaceDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* ⭐ Icon giỏ hàng góc dưới ➔ tự thêm vào giỏ */}
       <Animated.View style={[styles.cartButton, { transform: [{ scale: cartAnim }] }]}>
         <TouchableOpacity onPress={addToCart}>
           <Ionicons name="cart-outline" size={28} color="#fff" />
@@ -281,9 +276,7 @@ const styles = StyleSheet.create({
   image: { width, height: 220 },
   contentBox: { backgroundColor: '#fff', margin: 12, padding: 16, borderRadius: 12 },
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 12, color: '#222' },
-  addToCartButton: {
-    flexDirection: 'row', backgroundColor: '#000', padding: 12, borderRadius: 8, marginTop: 16, alignItems: 'center', justifyContent: 'center',
-  },
+  description: { fontSize: 15, color: '#555', marginBottom: 12, lineHeight: 22 },
   infoRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 4 },
   infoText: { marginLeft: 8, fontSize: 15, color: '#444', flexShrink: 1 },
   priceText: { fontSize: 16, color: '#FF3B30', marginTop: 8, fontWeight: '600' },
