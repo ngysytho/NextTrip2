@@ -6,14 +6,16 @@ import java.util.Date;
 
 public class UserResponse {
 
+    private String userId; // ✅ đổi camelCase theo convention
     private String username;
     private String displayName;
     private String email;
     private String birthDate;
     private String gender;
 
-    // Constructor that maps User object to UserResponse
+    // ✅ Constructor mapping User -> UserResponse
     public UserResponse(User user) {
+        this.userId = user.getUserId(); // ✅ gọi đúng getter
         this.username = user.getUsername_user();
         this.displayName = user.getDisplayName_user();
         this.email = user.getEmail_user();
@@ -21,7 +23,7 @@ public class UserResponse {
         this.gender = user.getGender_user();
     }
 
-    // Format the birth date to a string
+    // ✅ Format birth date thành string yyyy-MM-dd
     private String formatDate(Date birthDate) {
         if (birthDate == null) {
             return null;
@@ -30,12 +32,13 @@ public class UserResponse {
         return sdf.format(birthDate);
     }
 
-    // Getters
+    // ✅ Getters
+    public String getUserId() { return userId; }
     public String getUsername() { return username; }
     public String getDisplayName() { return displayName; }
     public String getEmail() { return email; }
     public String getBirthDate() { return birthDate; }
     public String getGender() { return gender; }
 
-    // Optionally, add setters if needed
+    // ✅ Optionally, add setters if needed (hiện tại chỉ cần getter cho response)
 }

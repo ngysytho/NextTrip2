@@ -1,85 +1,140 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-    View,
-    Text,
-    Image,
-    TouchableOpacity,
-    StyleSheet,
-    SafeAreaView,
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
-import { useAppTheme } from '../../context/ThemeContext'; // ✅ THÊM
+import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
+
+type CartItem = {
+  placeId: string;
+  name: string;
+  price: number;
+};
 
 export default function CartScreen() {
-    const { theme } = useAppTheme(); // ✅ LẤY THEME
-    const isDark = theme === 'dark';
+  const { user } = useAuth();
+  const router = useRouter();
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-    return (
-        <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000' : '#fff' }]}>
-            <Text style={[styles.header, { color: isDark ? '#fff' : '#000' }]}>
-                Xe đẩy hàng (0 mục)
-            </Text>
+  // 🛠️ Fetch cart mỗi lần màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      const fetchCart = async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+          const res = await axios.get(`http://192.168.1.7:8080/api/cart/${user.userId}`);
+          setCart(res.data.items);
+        } catch (err) {
+          console.log('❌ Lỗi fetch cart:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchCart();
+    }, [user])
+  );
 
-            <View style={styles.content}>
-                <Image
-                    source={require('../../assets/images/NextTripLogo.png')} // ← Thay bằng ảnh hành lý của bạn
-                    style={styles.image}
-                    resizeMode="contain"
-                />
-                <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>
-                    Giỏ hàng của quý khách chẳng có gì bên trong
-                </Text>
-                <Text style={[styles.subtitle, { color: isDark ? '#aaa' : '#666' }]}>
-                    Hãy mua khách sạn, quán ăn và điểm thu hút để lập kế hoạch cho chuyến của bạn
-                </Text>
+  const clearCart = async () => {
+    if (!user) return;
+    try {
+      await axios.post(`http://192.168.1.7:8080/api/cart/${user.userId}/clear`);
+      setCart([]);
+      Alert.alert('✅', 'Đã xoá giỏ hàng');
+    } catch (err) {
+      console.log('❌ Lỗi clear cart:', err);
+    }
+  };
 
-                <TouchableOpacity style={styles.button}>
-                    <Text style={styles.buttonText}>Tìm kiếm du lịch</Text>
-                </TouchableOpacity>
+  if (loading) {
+    return <ActivityIndicator size="large" color="#007AFF" style={{ flex: 1, justifyContent: 'center' }} />;
+  }
+
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Giỏ hàng của bạn ({cart.length} mục)</Text>
+
+      {cart.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Giỏ hàng trống.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={cart}
+          keyExtractor={(item) => item.placeId}
+          renderItem={({ item }) => (
+            <View style={styles.item}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemPrice}>{item.price.toLocaleString()} VNĐ</Text>
             </View>
-        </SafeAreaView>
-    );
+          )}
+        />
+      )}
+
+      <View style={styles.footer}>
+        <Text style={styles.total}>Tổng: {total.toLocaleString()} VNĐ</Text>
+        <TouchableOpacity style={styles.button} onPress={clearCart}>
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Xoá giỏ hàng</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.replace('/')}
+      >
+        <Ionicons name="arrow-back" size={20} color="#fff" />
+        <Text style={styles.buttonText}>Tiếp tục mua sắm</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    header: {
-        textAlign: 'center',
-        fontSize: 18,
-        fontWeight: '600',
-        paddingVertical: 16,
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-    },
-    image: {
-        width: 120,
-        height: 120,
-        marginBottom: 24,
-    },
-    title: {
-        fontSize: 17,
-        fontWeight: '600',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    subtitle: {
-        textAlign: 'center',
-        fontSize: 14,
-        marginBottom: 24,
-    },
-    button: {
-        backgroundColor: '#2F6FED',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 8,
-        elevation: 2,
-    },
-    buttonText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 15,
-    },
+  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16 },
+  header: { fontSize: 20, fontWeight: 'bold', marginVertical: 16, textAlign: 'center' },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyText: { fontSize: 16, color: '#666' },
+  item: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 0.5,
+    borderColor: '#ddd',
+  },
+  itemName: { fontSize: 16, color: '#222' },
+  itemPrice: { fontSize: 16, color: '#FF9500' },
+  footer: { paddingVertical: 16, borderTopWidth: 0.5, borderColor: '#ddd' },
+  total: { fontSize: 18, fontWeight: '600', textAlign: 'right', marginBottom: 12 },
+  button: {
+    backgroundColor: '#FF3B30',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  buttonText: { color: '#fff', fontSize: 15, fontWeight: '600', marginLeft: 8 },
+  backButton: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginVertical: 16,
+  },
 });

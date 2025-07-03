@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         logger.info("➡️ JwtFilter checking path: {}", path);
 
@@ -56,12 +56,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
+            // ✅ Nếu email hợp lệ & chưa được authenticate ➔ set vào SecurityContext
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(email, null, null);
+                        new UsernamePasswordAuthenticationToken(email, null, null); // roles null
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+
         } catch (Exception e) {
             logger.error("❌ JWT Filter Error: {}", e.getMessage());
         }

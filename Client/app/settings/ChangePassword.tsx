@@ -50,7 +50,7 @@ export default function ChangePasswordScreen() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://192.168.0.119:8080/api/users/change-password', {
+      const res = await fetch('http://192.168.1.6:8080/api/users/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

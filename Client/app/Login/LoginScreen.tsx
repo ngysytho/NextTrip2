@@ -11,14 +11,16 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, Stack } from 'expo-router'; // ✅ import Stack
+import { useRouter, Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppTheme } from '../../context/ThemeContext';
 import { STORAGE_KEYS } from '../../constants/storageKeys';
+import { useAuth } from '../../context/AuthContext'; // ✅ import useAuth
 
 type LoginResponse = {
   token: string;
   user: {
+    userId: string; // ✅ correct field naming
     displayName: string;
     username: string;
     email: string;
@@ -37,6 +39,8 @@ export default function LoginScreen() {
   const { theme } = useAppTheme();
   const isDark = theme === 'dark';
 
+  const { setUser } = useAuth(); // ✅ get setUser from context
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Thông báo', 'Vui lòng nhập đầy đủ thông tin');
@@ -46,7 +50,7 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const loginRes = await fetch('http://192.168.0.119:8080/api/users/login', {
+      const loginRes = await fetch('http://192.168.1.6:8080/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -64,16 +68,34 @@ export default function LoginScreen() {
       const loginData: LoginResponse = await loginRes.json();
       console.log('✅ loginData:', loginData);
 
+      const user = loginData.user;
+
+      // ✅ Validate userId
+      if (!user.userId) {
+        console.error('❌ userId undefined in response:', user);
+        Alert.alert('Lỗi', 'Dữ liệu user không hợp lệ (thiếu userId)');
+        return;
+      }
+
+      // ✅ Save token
       await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, loginData.token);
 
-      const user = loginData.user;
+      // ✅ Save user info into AsyncStorage
       await AsyncStorage.multiSet([
+        ['userId', user.userId ?? ''],
         [STORAGE_KEYS.DISPLAY_NAME, user.displayName ?? ''],
         [STORAGE_KEYS.USERNAME, user.username ?? ''],
         [STORAGE_KEYS.EMAIL, user.email ?? ''],
         [STORAGE_KEYS.BIRTH_DATE, user.birthDate ?? ''],
         [STORAGE_KEYS.GENDER, String(user.gender ?? '')],
       ]);
+
+      // ✅ SET USER IN CONTEXT
+      setUser({
+        userId: user.userId,
+        username: user.username,
+        email: user.email,
+      });
 
       Alert.alert('Thành công', '🎉 Đăng nhập thành công!');
       router.replace('/');
@@ -87,7 +109,7 @@ export default function LoginScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} /> {/* ✅ Ẩn header */}
+      <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={[styles.safeArea, { backgroundColor: isDark ? '#000' : '#fff' }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}

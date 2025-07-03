@@ -50,7 +50,7 @@ export default function UpdateProfileScreen() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://192.168.0.119:8080/api/users/update-profile', {
+      const res = await fetch('http://192.168.1.6:8080/api/users/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -164,7 +164,7 @@ export default function MoreScreen() {
         style={[styles.header, { backgroundColor: '#000000' }]}
         onPress={() => {
           if (!isLoggedIn) {
-            router.push('/Login');
+            router.push('/Login/LoginScreen');
           }
         }}
       >

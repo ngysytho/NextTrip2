@@ -69,7 +69,7 @@ export default function HomeScreen() {
     else setLoadingMore(true);
 
     try {
-      const url = `http://192.168.1.6:8080/api/places/category/${encodeURIComponent(activeTab)}?page=${pageNumber}&limit=10`;
+      const url = `http://192.168.1.7:8080/api/places/category/${encodeURIComponent(activeTab)}?page=${pageNumber}&limit=10`;
       console.log('🔗 Fetching URL:', url);
 
       const res = await axios.get(url);

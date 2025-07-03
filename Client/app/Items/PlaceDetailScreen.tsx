@@ -1,16 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-  Platform,
-  Alert,
+  View, Text, Image, StyleSheet, ScrollView, Dimensions, TouchableOpacity,
+  ActivityIndicator, TextInput, Platform, Alert, Animated,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +24,7 @@ type Place = {
   phone_number_places: string;
   image_url_places: string;
   rating_places: number;
+  rating_count: number;
   latitude_places: number;
   longitude_places: number;
   group_type: string;
@@ -55,17 +47,12 @@ export default function PlaceDetailScreen() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [menu, setMenu] = useState<any[]>([
-    { name: 'Cà phê sữa đá', price: 25000 },
-    { name: 'Trà đào cam sả', price: 35000 },
-    { name: 'Bánh mì ốp la', price: 30000 },
-  ]);
-  const [menuExpanded, setMenuExpanded] = useState(false);
+  const cartAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const fetchPlace = async () => {
       try {
-        const res = await axios.get(`http://192.168.1.6:8080/api/places/${place_id}`);
+        const res = await axios.get(`http://192.168.1.7:8080/api/places/${place_id}`);
         setPlace(res.data);
       } catch (err) {
         console.log('❌ Lỗi load place:', err);
@@ -80,7 +67,7 @@ export default function PlaceDetailScreen() {
     useCallback(() => {
       const fetchReviews = async () => {
         try {
-          const res = await axios.get(`http://192.168.1.6:8080/api/reviews/${place_id}`);
+          const res = await axios.get(`http://192.168.1.7:8080/api/reviews/${place_id}`);
           setReviews(res.data);
         } catch (err) {
           console.log('❌ Lỗi load reviews:', err);
@@ -98,6 +85,40 @@ export default function PlaceDetailScreen() {
     Linking.openURL(url);
   };
 
+  const animateCart = () => {
+    Animated.sequence([
+      Animated.timing(cartAnim, {
+        toValue: 1.3,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cartAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const addToCart = async () => {
+    if (!user) {
+      Alert.alert('❌', 'Bạn cần đăng nhập để thêm vào giỏ hàng');
+      return;
+    }
+    try {
+      await axios.post(`http://192.168.1.7:8080/api/cart/${user.userId}/add`, {
+        placeId: place?.place_id,
+        name: place?.name_places,
+        price: place?.ticket_price_places ?? 0,
+      });
+      Alert.alert('✅', 'Đã thêm vào giỏ hàng');
+      animateCart();
+    } catch (err) {
+      console.log(err);
+      Alert.alert('❌', 'Thêm vào giỏ hàng thất bại');
+    }
+  };
+
   const submitReview = async () => {
     if (selectedRating === 0 || comment.trim() === '') {
       Alert.alert('❌', 'Vui lòng chọn sao và nhập bình luận');
@@ -111,9 +132,9 @@ export default function PlaceDetailScreen() {
 
     setSubmitting(true);
     try {
-      await axios.post('http://192.168.1.6:8080/api/reviews', {
+      await axios.post('http://192.168.1.7:8080/api/reviews', {
         place_id,
-        user_id: user.user_id,
+        user_id: user.userId,
         username: user.username,
         rating: selectedRating,
         comment,
@@ -121,7 +142,7 @@ export default function PlaceDetailScreen() {
       Alert.alert('✅', 'Đã gửi đánh giá');
       setSelectedRating(0);
       setComment('');
-      const res = await axios.get(`http://192.168.1.6:8080/api/reviews/${place_id}`);
+      const res = await axios.get(`http://192.168.1.7:8080/api/reviews/${place_id}`);
       setReviews(res.data);
     } catch (err) {
       console.log(err);
@@ -139,8 +160,7 @@ export default function PlaceDetailScreen() {
     return <Text style={{ textAlign: 'center', marginTop: 20 }}>Không tìm thấy địa điểm.</Text>;
   }
 
-  const isRestaurantOrCafe =
-    place.group_type?.toLowerCase() === 'nhà hàng' || place.group_type?.toLowerCase() === 'quán nước';
+  const averageRating = place.rating_places?.toFixed(1) ?? '0.0';
 
   return (
     <>
@@ -150,59 +170,36 @@ export default function PlaceDetailScreen() {
         <View style={styles.contentBox}>
           <Text style={styles.title}>{place.name_places}</Text>
 
+          <TouchableOpacity style={styles.addToCartButton} onPress={addToCart}>
+            <Ionicons name="cart" size={20} color="#fff" />
+            <Text style={{ color: '#fff', marginLeft: 8 }}>Thêm vào giỏ hàng</Text>
+          </TouchableOpacity>
+
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={18} color="#555" />
             <Text style={styles.infoText}>{place.address_places}</Text>
           </View>
 
+          {/* ⭐ Giờ mở cửa */}
           <View style={styles.infoRow}>
-            <Ionicons name="call-outline" size={18} color="#555" />
-            <Text style={styles.infoText}>{place.phone_number_places || 'Chưa cập nhật'}</Text>
+            <Ionicons name="time-outline" size={18} color="#555" />
+            <Text style={styles.infoText}>
+              Giờ mở cửa: {place.open_time_places ?? 'Chưa cập nhật'} - {place.close_time_places ?? 'Chưa cập nhật'}
+            </Text>
           </View>
-
-          <Text style={styles.description}>{place.description_places}</Text>
 
           <Text style={styles.priceText}>
             Giá: {place.ticket_price_places ? `${place.ticket_price_places.toLocaleString()} VNĐ` : 'Chưa cập nhật'}
           </Text>
 
-          {isRestaurantOrCafe && (
-            <>
-              <TouchableOpacity
-                style={styles.menuHeader}
-                onPress={() => setMenuExpanded(!menuExpanded)}
-              >
-                <Text style={styles.sectionTitle}>Menu</Text>
-                <Ionicons
-                  name={menuExpanded ? 'chevron-up-outline' : 'chevron-down-outline'}
-                  size={24}
-                  color="#333"
-                />
-              </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
+            <Ionicons name="star" size={20} color="#FFD700" />
+            <Text style={{ fontSize: 16, fontWeight: '500', marginLeft: 4 }}>
+              {averageRating}/5 ({place.rating_count} đánh giá)
+            </Text>
+          </View>
 
-              {menuExpanded && (
-                menu.length === 0 ? (
-                  <Text style={{ color: '#666' }}>Chưa có menu</Text>
-                ) : (
-                  menu.map((item, index) => (
-                    <View key={index} style={styles.menuItem}>
-                      <View>
-                        <Text style={styles.menuItemName}>{item.name}</Text>
-                        <Text style={styles.menuItemPrice}>{item.price.toLocaleString()} VNĐ</Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => Alert.alert('🛒', `Đã thêm ${item.name} vào giỏ hàng`)}
-                        style={styles.addButton}
-                      >
-                        <Ionicons name="add" size={24} color="#fff" />
-                      </TouchableOpacity>
-                    </View>
-                  ))
-                )
-              )}
-            </>
-          )}
-
+          {/* ⭐ Map */}
           <MapView
             style={styles.map}
             provider={PROVIDER_GOOGLE}
@@ -226,6 +223,7 @@ export default function PlaceDetailScreen() {
             <Text style={styles.directionButtonText}>Chỉ đường</Text>
           </TouchableOpacity>
 
+          {/* ⭐ Review */}
           <Text style={styles.sectionTitle}>Viết đánh giá của bạn</Text>
 
           <View style={styles.starsRow}>
@@ -267,6 +265,13 @@ export default function PlaceDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* ⭐ Icon giỏ hàng góc dưới ➔ tự thêm vào giỏ */}
+      <Animated.View style={[styles.cartButton, { transform: [{ scale: cartAnim }] }]}>
+        <TouchableOpacity onPress={addToCart}>
+          <Ionicons name="cart-outline" size={28} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
     </>
   );
 }
@@ -274,71 +279,25 @@ export default function PlaceDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   image: { width, height: 220 },
-  contentBox: {
-    backgroundColor: '#fff',
-    margin: 12,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
+  contentBox: { backgroundColor: '#fff', margin: 12, padding: 16, borderRadius: 12 },
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 12, color: '#222' },
+  addToCartButton: {
+    flexDirection: 'row', backgroundColor: '#000', padding: 12, borderRadius: 8, marginTop: 16, alignItems: 'center', justifyContent: 'center',
+  },
   infoRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 4 },
   infoText: { marginLeft: 8, fontSize: 15, color: '#444', flexShrink: 1 },
-  description: { fontSize: 16, color: '#555', marginTop: 12, lineHeight: 22 },
   priceText: { fontSize: 16, color: '#FF3B30', marginTop: 8, fontWeight: '600' },
-  sectionTitle: { fontSize: 20, fontWeight: '600', color: '#333' },
-  menuHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
-  menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    borderColor: '#ddd',
-    alignItems: 'center',
-  },
-  menuItemName: { fontSize: 16, color: '#222' },
-  menuItemPrice: { fontSize: 16, color: '#FF9500' },
-  addButton: {
-    backgroundColor: '#007AFF',
-    padding: 6,
-    borderRadius: 20,
-  },
-  map: { width: '100%', height: 200, borderRadius: 12, marginTop: 12 },
-  directionButton: {
-    backgroundColor: '#34A853',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  directionButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  sectionTitle: { fontSize: 20, fontWeight: '600', color: '#333', marginTop: 12 },
   starsRow: { flexDirection: 'row', justifyContent: 'center', marginVertical: 12 },
-  commentInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    textAlignVertical: 'top',
-    marginBottom: 12,
-  },
-  submitButton: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  commentInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, textAlignVertical: 'top', marginBottom: 12 },
+  submitButton: { backgroundColor: '#007AFF', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
   submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  reviewItem: {
-    backgroundColor: '#f9f9f9',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
+  reviewItem: { backgroundColor: '#f9f9f9', padding: 12, borderRadius: 8, marginBottom: 8 },
   reviewUser: { fontWeight: 'bold', marginBottom: 4, fontSize: 15 },
   reviewRating: { fontSize: 14, color: '#444' },
   reviewComment: { fontSize: 14, color: '#555', marginTop: 4 },
+  map: { width: '100%', height: 200, borderRadius: 12, marginTop: 12 },
+  directionButton: { backgroundColor: '#34A853', paddingVertical: 12, borderRadius: 8, marginTop: 12, alignItems: 'center' },
+  directionButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  cartButton: { position: 'absolute', bottom: 20, left: 20, backgroundColor: '#000', borderRadius: 30, padding: 12 },
 });
