@@ -6,6 +6,7 @@ import com.nexttrip2.server.model.Cart;
 import com.nexttrip2.server.model.CartItem;
 import com.nexttrip2.server.responses.CartResponse;
 import com.nexttrip2.server.service.ICartService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,14 +20,17 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @GetMapping("/{userId}")
-    public CartResponse getCart(@PathVariable String userId) {
+    @GetMapping
+    public CartResponse getCart() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         Cart cart = cartService.getCartByUserId(userId);
         return new CartResponse(cart.getUserId(), cart.getItems());
     }
 
-    @PostMapping("/{userId}/add")
-    public CartResponse addToCart(@PathVariable String userId, @RequestBody CartItemRequestDTO request) {
+    @PostMapping("/add")
+    public CartResponse addToCart(@RequestBody CartItemRequestDTO request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
         CartItem item = new CartItem(
             request.getPlaceId(),
             request.getName(),
@@ -39,14 +43,16 @@ public class CartController {
         return new CartResponse(cart.getUserId(), cart.getItems());
     }
 
-    @PostMapping("/{userId}/clear")
-    public String clearCart(@PathVariable String userId) {
+    @PostMapping("/clear")
+    public String clearCart() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         cartService.clearCart(userId);
         return "Đã xoá giỏ hàng";
     }
 
-    @PostMapping("/{userId}/remove-multiple")
-    public String removeMultipleItems(@PathVariable String userId, @RequestBody DeleteCartItemsRequest request) {
+    @PostMapping("/remove-multiple")
+    public String removeMultipleItems(@RequestBody DeleteCartItemsRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         cartService.removeMultipleItems(userId, request.getPlaceIds());
         return "Đã xoá các mục đã chọn";
     }

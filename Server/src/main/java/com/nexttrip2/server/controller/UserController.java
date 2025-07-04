@@ -43,7 +43,8 @@ public class UserController {
         try {
             User authenticatedUser = userService.authenticate(user.getEmail_user(), user.getPassword_user());
             if (authenticatedUser != null) {
-                String token = jwtUtil.generateToken(authenticatedUser.getEmail_user());
+                // ✅ Generate token with userId + email
+                String token = jwtUtil.generateToken(authenticatedUser.getId(), authenticatedUser.getEmail_user());
                 UserResponse userResponse = new UserResponse(authenticatedUser);
                 return ResponseEntity.ok(new LoginResponse(token, userResponse));
             } else {

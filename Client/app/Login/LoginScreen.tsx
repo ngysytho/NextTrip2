@@ -20,7 +20,7 @@ import { useAuth } from '../../context/AuthContext'; // ✅ import useAuth
 type LoginResponse = {
   token: string;
   user: {
-    userId: string; // ✅ correct field naming
+    userId: string;
     displayName: string;
     username: string;
     email: string;
@@ -39,7 +39,7 @@ export default function LoginScreen() {
   const { theme } = useAppTheme();
   const isDark = theme === 'dark';
 
-  const { setUser } = useAuth(); // ✅ get setUser from context
+  const { setUser, setToken } = useAuth(); // ✅ get setUser & setToken from context
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -50,7 +50,7 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const loginRes = await fetch('http://192.168.1.6:8080/api/users/login', {
+      const loginRes = await fetch('http://192.168.1.7:8080/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,6 +79,7 @@ export default function LoginScreen() {
 
       // ✅ Save token
       await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, loginData.token);
+      setToken(loginData.token); // ✅ set token into context
 
       // ✅ Save user info into AsyncStorage
       await AsyncStorage.multiSet([

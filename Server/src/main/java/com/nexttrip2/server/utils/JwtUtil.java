@@ -16,14 +16,24 @@ public class JwtUtil {
 
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    // ✅ Generate token
-    public String generateToken(String subject) {
+    // ✅ Generate token with userId + email
+    public String generateToken(String userId, String email) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(email) // email làm subject
+                .claim("userId", userId) // thêm userId claim
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    // ✅ Refresh token dựa trên token cũ
+    public String refreshToken(String token) {
+        Claims claims = getClaims(token);
+        String userId = claims.get("userId", String.class);
+        String email = claims.getSubject();
+
+        return generateToken(userId, email);
     }
 
     // ✅ Validate token
@@ -54,7 +64,7 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // ✅ Get subject (email or username) from token
+    // ✅ Get subject (email) from token
     public String getSubject(String token) {
         return getClaims(token).getSubject();
     }

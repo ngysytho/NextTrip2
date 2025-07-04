@@ -31,16 +31,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // ✅ Disable CSRF for JWT usage
+            .csrf(csrf -> csrf.disable())
             .cors().and()
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/users/**",   // ✅ Auth routes (login, register)
-                    "/api/places/**",  // ✅ Public place APIs
-                    "/api/reviews/**", // ✅ Public reviews APIs
-                    "/api/cart/**"     // ✅ Allow cart APIs if not protected (update if needed)
+                    "/api/users/**",   // login, register public
+                    "/api/places/**",  // public places
+                    "/api/reviews/**"  // public reviews
                 ).permitAll()
+                .requestMatchers("/api/cart/**").authenticated() // ✅ chỉ user login mới gọi được
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -53,7 +53,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList(
             "http://localhost:19006",
-            "http://192.168.1.6:19006" // 🔧 Update with your Expo LAN IP
+            "http://192.168.1.7:19006"
         ));
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");

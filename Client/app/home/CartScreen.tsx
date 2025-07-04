@@ -27,7 +27,7 @@ type CartItem = {
 };
 
 export default function CartScreen() {
-  const { user } = useAuth();
+  const { token } = useAuth(); // ✅ lấy token từ context
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -36,28 +36,37 @@ export default function CartScreen() {
   useFocusEffect(
     useCallback(() => {
       const fetchCart = async () => {
-        if (!user) return;
+        if (!token) {
+          Alert.alert('❌', 'Vui lòng đăng nhập');
+          return;
+        }
+
+        console.log("🔑 Token fetch cart:", token); // ✅ check token
+
         setLoading(true);
         try {
-          const res = await axios.get(`http://192.168.1.7:8080/api/cart/${user.userId}`);
+          const res = await axios.get(`http://192.168.1.7:8080/api/cart`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           const dataWithSelect = res.data.items.map((item: any) => ({
             placeId: item.placeId,
             name: item.name,
             price: item.price,
-            imageUrl: item.image_url_places,
-            description: item.description_places,
-            address: item.address_places,
+            imageUrl: item.imageUrl,
+            description: item.description,
+            address: item.address,
             selected: false,
           }));
           setCart(dataWithSelect);
         } catch (err) {
           console.log('❌ Lỗi fetch cart:', err);
+          Alert.alert('❌', 'Lỗi lấy giỏ hàng (403 Forbidden)');
         } finally {
           setLoading(false);
         }
       };
       fetchCart();
-    }, [user])
+    }, [token])
   );
 
   const toggleSelect = (placeId: string) => {
@@ -89,7 +98,13 @@ export default function CartScreen() {
     }
 
     try {
-      await axios.post(`http://192.168.1.7:8080/api/cart/${user.userId}/remove-multiple`, { placeIds: selectedIds });
+      await axios.post(
+        `http://192.168.1.7:8080/api/cart/remove-multiple`,
+        { placeIds: selectedIds },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setCart((prev) => prev.filter((item) => !selectedIds.includes(item.placeId)));
       setIsEditing(false);
     } catch (err) {
@@ -108,7 +123,9 @@ export default function CartScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <Ionicons name="arrow-back" size={24} />
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} />
+        </TouchableOpacity>
         <Text style={styles.header}>Chuyến đi của bạn ({cart.length} mục)</Text>
         <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
           <Text style={styles.editText}>{isEditing ? 'Xong' : 'Sửa'}</Text>
@@ -167,7 +184,7 @@ export default function CartScreen() {
               style={styles.aiButton}
               onPress={aiCreateTrip}
             >
-              <Text style={styles.buttonText}>Nhờ AI tạo chuyến đi</Text>
+              <Text style={styles.buttonText}>AI tạo chuyến đi</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -212,7 +229,7 @@ const styles = StyleSheet.create({
   price: { fontSize: 15, color: '#FF3B30', marginTop: 6, fontWeight: '600' },
   footer: {
     position: 'absolute',
-    bottom: 100, // nâng lên trên tab bar
+    bottom: 100,
     left: 0,
     right: 0,
     borderTopWidth: 0.5,

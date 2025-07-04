@@ -40,7 +40,7 @@ type Review = {
 
 export default function PlaceDetailScreen() {
   const { place_id } = useLocalSearchParams();
-  const { user } = useAuth();
+  const { user, token } = useAuth(); // ✅ get token if needed
   const [place, setPlace] = useState<Place | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -101,26 +101,33 @@ export default function PlaceDetailScreen() {
   };
 
   const addToCart = async () => {
-    if (!user) {
-      Alert.alert('❌', 'Bạn cần đăng nhập để thêm vào giỏ hàng');
-      return;
-    }
-    try {
-      await axios.post(`http://192.168.1.7:8080/api/cart/${user.userId}/add`, {
+  if (!user || !token) {
+    Alert.alert('❌', 'Bạn cần đăng nhập để thêm vào giỏ hàng');
+    return;
+  }
+  try {
+    await axios.post(
+      `http://192.168.1.7:8080/api/cart/add`, // ✅ FIXED route
+      {
         placeId: place?.place_id,
         name: place?.name_places,
         price: place?.ticket_price_places ?? 0,
         imageUrl: place?.image_url_places ?? "",
         description: place?.description_places ?? "",
         address: place?.address_places ?? "",
-      });
-      Alert.alert('✅', 'Đã thêm vào giỏ hàng');
-      animateCart();
-    } catch (err) {
-      console.log(err);
-      Alert.alert('❌', 'Thêm vào giỏ hàng thất bại');
-    }
-  };
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    Alert.alert('✅', 'Đã thêm vào giỏ hàng');
+    animateCart();
+  } catch (err) {
+    console.log(err);
+    Alert.alert('❌', 'Thêm vào giỏ hàng thất bại');
+  }
+};
+
 
   const submitReview = async () => {
     if (selectedRating === 0 || comment.trim() === '') {
@@ -173,7 +180,6 @@ export default function PlaceDetailScreen() {
         <View style={styles.contentBox}>
           <Text style={styles.title}>{place.name_places}</Text>
 
-          {/* ⭐ Miêu tả địa điểm */}
           <Text style={styles.description}>{place.description_places ?? 'Chưa có miêu tả.'}</Text>
 
           <View style={styles.infoRow}>
@@ -222,7 +228,6 @@ export default function PlaceDetailScreen() {
             <Text style={styles.directionButtonText}>Chỉ đường</Text>
           </TouchableOpacity>
 
-          {/* ⭐ Review */}
           <Text style={styles.sectionTitle}>Viết đánh giá của bạn</Text>
 
           <View style={styles.starsRow}>

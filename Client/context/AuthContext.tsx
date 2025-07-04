@@ -17,40 +17,40 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
+  token: string | null;
   setUser: (user: User) => void;
+  setToken: (token: string) => void;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-type Props = {
-  children: ReactNode;
-};
+type Props = { children: ReactNode };
 
 export const AuthProvider = ({ children }: Props) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  // ✅ Load user from AsyncStorage khi app khởi động
   useEffect(() => {
-    const loadUser = async () => {
+    const loadAuthData = async () => {
       try {
+        const storedToken = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         const userId = await AsyncStorage.getItem('userId');
         const username = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
         const email = await AsyncStorage.getItem(STORAGE_KEYS.EMAIL);
 
+        if (storedToken) setToken(storedToken);
         if (userId && username && email) {
           setUser({ userId, username, email });
-          console.log('✅ User loaded from storage:', { userId, username, email });
+          console.log('✅ User loaded:', { userId, username, email });
         }
       } catch (err) {
-        console.error('❌ Lỗi load user:', err);
+        console.error('❌ Load auth error:', err);
       }
     };
-
-    loadUser();
+    loadAuthData();
   }, []);
 
-  // ✅ Logout function
   const logout = async () => {
     try {
       await AsyncStorage.multiRemove([
@@ -58,19 +58,19 @@ export const AuthProvider = ({ children }: Props) => {
         'userId',
         STORAGE_KEYS.USERNAME,
         STORAGE_KEYS.EMAIL,
-        STORAGE_KEYS.DISPLAY_NAME,
-        STORAGE_KEYS.BIRTH_DATE,
-        STORAGE_KEYS.GENDER,
       ]);
       setUser(null);
+      setToken(null);
       console.log('✅ Logged out');
     } catch (err) {
-      console.error('❌ Lỗi logout:', err);
+      console.error('❌ Logout error:', err);
     }
   };
 
-  // ✅ useMemo để tránh recreate value mỗi render
-  const value = useMemo(() => ({ user, setUser, logout }), [user]);
+  const value = useMemo(
+    () => ({ user, token, setUser, setToken, logout }),
+    [user, token]
+  );
 
   return (
     <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
