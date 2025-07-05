@@ -27,7 +27,7 @@ type CartItem = {
 };
 
 export default function CartScreen() {
-  const { token } = useAuth(); // ✅ lấy token từ context
+  const { token, user } = useAuth(); // ✅ giả định user chứa userId
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -41,11 +41,9 @@ export default function CartScreen() {
           return;
         }
 
-        console.log("🔑 Token fetch cart:", token); // ✅ check token
-
         setLoading(true);
         try {
-          const res = await axios.get(`http://192.168.1.7:8080/api/cart`, {
+          const res = await axios.get(`http://192.168.1.9:8080/api/cart`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const dataWithSelect = res.data.items.map((item: any) => ({
@@ -60,7 +58,7 @@ export default function CartScreen() {
           setCart(dataWithSelect);
         } catch (err) {
           console.log('❌ Lỗi fetch cart:', err);
-          Alert.alert('❌', 'Lỗi lấy giỏ hàng (403 Forbidden)');
+          Alert.alert('❌', 'Lỗi lấy giỏ hàng');
         } finally {
           setLoading(false);
         }
@@ -77,17 +75,65 @@ export default function CartScreen() {
     );
   };
 
-  const createTrip = () => {
+  const showCreateTripOptions = () => {
     const selectedItems = cart.filter((item) => item.selected);
     if (selectedItems.length === 0) {
-      Alert.alert('❌', 'Vui lòng chọn ít nhất một địa điểm để tạo chuyến đi');
+      Alert.alert('❌', 'Vui lòng chọn ít nhất một địa điểm');
       return;
     }
-    router.push('/trip/create');
+
+    Alert.alert(
+      'Chọn cách tạo chuyến đi',
+      '',
+      [
+        {
+          text: 'Tạo đơn nháp',
+          onPress: () => createTrip(selectedItems, 'draft'),
+        },
+        {
+          text: 'Tạo chuyến đi',
+          onPress: () => createTrip(selectedItems, 'upcoming'),
+        },
+        {
+          text: 'Huỷ',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const createTrip = async (selectedItems: CartItem[], status: string) => {
+    if (!user || !user.userId) {
+      Alert.alert('❌', 'Không tìm thấy thông tin người dùng');
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `http://192.168.1.9:8080/api/trips`,
+        {
+          userId: user.userId, // ✅ thêm userId
+          tripName: status === 'draft' ? "Chuyến đi nháp mới" : "Chuyến đi mới",
+          pickupAddress: "Hà Nội",
+          returnAddress: "Chưa nhập",
+          startDate: "",
+          endDate: "",
+          status: status, // ✅ status dynamic
+          places: selectedItems,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Alert.alert('✅', status === 'draft' ? 'Đã tạo đơn nháp' : 'Đã tạo chuyến đi');
+      router.push('/home/TripScreen');
+    } catch (err: any) {
+      console.log(`❌ Lỗi tạo ${status === 'draft' ? 'draft trip' : 'trip'}:`, err.response || err);
+      Alert.alert('❌', `Tạo ${status === 'draft' ? 'đơn nháp' : 'chuyến đi'} thất bại`);
+    }
   };
 
   const aiCreateTrip = () => {
-    router.push('/trip/ai-create');
+    router.push('/home/AIScreen');
   };
 
   const deleteSelectedItems = async () => {
@@ -99,7 +145,7 @@ export default function CartScreen() {
 
     try {
       await axios.post(
-        `http://192.168.1.7:8080/api/cart/remove-multiple`,
+        `http://192.168.1.9:8080/api/cart/remove-multiple`,
         { placeIds: selectedIds },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -192,7 +238,7 @@ export default function CartScreen() {
                 styles.createButton,
                 { backgroundColor: selectedCount === 0 ? '#ccc' : '#34C759' },
               ]}
-              onPress={createTrip}
+              onPress={showCreateTripOptions}
               disabled={selectedCount === 0}
             >
               <Text style={styles.createButtonText}>Tạo chuyến đi</Text>

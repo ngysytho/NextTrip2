@@ -50,7 +50,7 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const loginRes = await fetch('http://192.168.1.7:8080/api/users/login', {
+      const loginRes = await fetch('http://192.168.1.9:8080/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

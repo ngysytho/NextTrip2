@@ -33,9 +33,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         logger.info("➡️ JwtFilter checking path: {}", path);
 
-        return path.startsWith("/api/users/") ||
-               path.startsWith("/api/places/") ||
-               path.startsWith("/api/reviews/");
+        // ✅ Bỏ qua filter cho các route public
+        return path.startsWith("/api/users/")
+                || path.startsWith("/api/places/")
+                || path.startsWith("/api/reviews/");
     }
 
     @Override
@@ -46,16 +47,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         String userId = null;
-        String jwt = null;
 
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                jwt = authHeader.substring(7);
+                String jwt = authHeader.substring(7);
                 if (jwtUtil.validateToken(jwt)) {
                     Claims claims = jwtUtil.getClaims(jwt);
                     userId = claims.get("userId", String.class);
                     if (userId == null) {
-                        userId = claims.getSubject(); // fallback
+                        userId = claims.getSubject(); // fallback to subject if userId missing
                     }
                     logger.info("✅ Authenticated userId: {}", userId);
                 }

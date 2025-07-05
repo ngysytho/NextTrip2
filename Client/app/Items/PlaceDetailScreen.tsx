@@ -52,7 +52,7 @@ export default function PlaceDetailScreen() {
   useEffect(() => {
     const fetchPlace = async () => {
       try {
-        const res = await axios.get(`http://192.168.1.7:8080/api/places/${place_id}`);
+        const res = await axios.get(`http://192.168.1.9:8080/api/places/${place_id}`);
         setPlace(res.data);
       } catch (err) {
         console.log('❌ Lỗi load place:', err);
@@ -67,7 +67,7 @@ export default function PlaceDetailScreen() {
     useCallback(() => {
       const fetchReviews = async () => {
         try {
-          const res = await axios.get(`http://192.168.1.7:8080/api/reviews/${place_id}`);
+          const res = await axios.get(`http://192.168.1.9:8080/api/reviews/${place_id}`);
           setReviews(res.data);
         } catch (err) {
           console.log('❌ Lỗi load reviews:', err);
@@ -101,32 +101,32 @@ export default function PlaceDetailScreen() {
   };
 
   const addToCart = async () => {
-  if (!user || !token) {
-    Alert.alert('❌', 'Bạn cần đăng nhập để thêm vào giỏ hàng');
-    return;
-  }
-  try {
-    await axios.post(
-      `http://192.168.1.7:8080/api/cart/add`, // ✅ FIXED route
-      {
-        placeId: place?.place_id,
-        name: place?.name_places,
-        price: place?.ticket_price_places ?? 0,
-        imageUrl: place?.image_url_places ?? "",
-        description: place?.description_places ?? "",
-        address: place?.address_places ?? "",
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    Alert.alert('✅', 'Đã thêm vào giỏ hàng');
-    animateCart();
-  } catch (err) {
-    console.log(err);
-    Alert.alert('❌', 'Thêm vào giỏ hàng thất bại');
-  }
-};
+    if (!user || !token) {
+      Alert.alert('❌', 'Bạn cần đăng nhập để thêm vào giỏ hàng');
+      return;
+    }
+    try {
+      await axios.post(
+        `http://192.168.1.9:8080/api/cart/add`, // ✅ FIXED route
+        {
+          placeId: place?.place_id,
+          name: place?.name_places,
+          price: place?.ticket_price_places ?? 0,
+          imageUrl: place?.image_url_places ?? "",
+          description: place?.description_places ?? "",
+          address: place?.address_places ?? "",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      Alert.alert('✅', 'Đã thêm vào giỏ hàng');
+      animateCart();
+    } catch (err) {
+      console.log(err);
+      Alert.alert('❌', 'Thêm vào giỏ hàng thất bại');
+    }
+  };
 
 
   const submitReview = async () => {

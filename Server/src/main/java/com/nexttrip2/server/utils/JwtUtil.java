@@ -16,7 +16,9 @@ public class JwtUtil {
 
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    // ✅ Generate token with userId + email
+    /**
+     * ✅ Generate token with userId + email
+     */
     public String generateToken(String userId, String email) {
         return Jwts.builder()
                 .setSubject(email) // email làm subject
@@ -27,7 +29,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    // ✅ Refresh token dựa trên token cũ
+    /**
+     * ✅ Refresh token dựa trên token cũ
+     */
     public String refreshToken(String token) {
         Claims claims = getClaims(token);
         String userId = claims.get("userId", String.class);
@@ -36,7 +40,9 @@ public class JwtUtil {
         return generateToken(userId, email);
     }
 
-    // ✅ Validate token
+    /**
+     * ✅ Validate token
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -55,7 +61,9 @@ public class JwtUtil {
         return false;
     }
 
-    // ✅ Get claims from token
+    /**
+     * ✅ Get claims from token
+     */
     public Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -64,12 +72,24 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // ✅ Get subject (email) from token
+    /**
+     * ✅ Get subject (email) from token
+     */
     public String getSubject(String token) {
         return getClaims(token).getSubject();
     }
 
-    // ✅ Check if token is expired
+    /**
+     * ✅ Extract userId from token
+     */
+    public String extractUserId(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("userId", String.class);
+    }
+
+    /**
+     * ✅ Check if token is expired
+     */
     public boolean isTokenExpired(String token) {
         Date expiration = getClaims(token).getExpiration();
         return expiration.before(new Date());

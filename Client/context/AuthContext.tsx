@@ -7,6 +7,7 @@ import React, {
   useEffect,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
 import { STORAGE_KEYS } from '../constants/storageKeys';
 
 type User = {
@@ -35,14 +36,17 @@ export const AuthProvider = ({ children }: Props) => {
     const loadAuthData = async () => {
       try {
         const storedToken = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-        const userId = await AsyncStorage.getItem('userId');
-        const username = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
-        const email = await AsyncStorage.getItem(STORAGE_KEYS.EMAIL);
 
-        if (storedToken) setToken(storedToken);
-        if (userId && username && email) {
+        if (storedToken) {
+          setToken(storedToken);
+
+          const decoded: any = jwtDecode(storedToken);
+          const userId = decoded.userId;
+          const email = decoded.sub;
+          const username = decoded.username ?? '';
+
           setUser({ userId, username, email });
-          console.log('✅ User loaded:', { userId, username, email });
+          console.log('✅ User loaded from token decode:', { userId, username, email });
         }
       } catch (err) {
         console.error('❌ Load auth error:', err);
@@ -55,7 +59,6 @@ export const AuthProvider = ({ children }: Props) => {
     try {
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.ACCESS_TOKEN,
-        'userId',
         STORAGE_KEYS.USERNAME,
         STORAGE_KEYS.EMAIL,
       ]);
