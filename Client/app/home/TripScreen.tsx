@@ -13,6 +13,7 @@ import {
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useAuth } from '../../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 type TripPlace = {
   placeId: string;
@@ -76,15 +77,17 @@ export default function TripScreen() {
   const [tabDangChon, setTabDangChon] = useState<TripTab>('Chuyến đi');
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [tripDetail, setTripDetail] = useState<Trip | null>(null);
+  const [editedTrip, setEditedTrip] = useState<Trip | null>(null);
+  const [isEditingTrip, setIsEditingTrip] = useState(false);
+  const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetData, setBudgetData] = useState<BudgetItem[]>([]);
   const [scheduleData, setScheduleData] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isEdited, setIsEdited] = useState(false);
 
   const isTokenExpired = (token: string) => {
     const decoded: DecodedToken = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
-    return decoded.exp < currentTime;
+    return decoded.exp < Date.now() / 1000;
   };
 
   const convertTabToStatus = (tab: TripTab) => {
@@ -97,109 +100,72 @@ export default function TripScreen() {
     }
   };
 
-  useEffect(() => {
-    const fetchTrips = async () => {
-      if (!token) return;
-
-      if (isTokenExpired(token)) {
-        Alert.alert('Phiên đăng nhập hết hạn', 'Vui lòng đăng nhập lại');
-        logout();
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const decoded: DecodedToken = jwtDecode(token);
-        const userId = decoded.userId;
-        console.log('🔑 Token userId:', userId);
-
-        const res = await axios.get(`http://192.168.1.9:8080/api/trips/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setTrips(res.data ?? []);
-        if (res.data?.length > 0) {
-          setSelectedTripId(res.data[0].id);
-        }
-      } catch (err: any) {
-        console.log('❌ Lỗi lấy danh sách trip:', err.response?.status, err.response?.data || err.message);
-        Alert.alert('❌', 'Không thể tải danh sách trip');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrips();
-  }, [token]);
+  const fetchTrips = async () => {
+    if (!token || isTokenExpired(token)) { logout(); return; }
+    setLoading(true);
+    try {
+      const decoded: DecodedToken = jwtDecode(token);
+      const res = await axios.get(`http://192.168.1.4:8080/api/trips/user/${decoded.userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTrips(res.data ?? []);
+    } catch (err: any) { console.log('❌', err.response?.data || err.message); }
+    finally { setLoading(false); }
+  };
 
   const fetchTripDetail = async (tripId: string) => {
     try {
-      const res = await axios.get<Trip>(`http://192.168.1.9:8080/api/trips/${tripId}`, {
+      const res = await axios.get<Trip>(`http://192.168.1.4:8080/api/trips/${tripId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTripDetail(res.data);
-    } catch (err: any) {
-      console.log('❌ Lỗi lấy trip detail:', err.response?.status, err.response?.data || err.message);
-      Alert.alert('❌', 'Không thể tải chi tiết chuyến đi');
-    }
+      setEditedTrip(res.data);
+    } catch (err: any) { console.log('❌', err.response?.data || err.message); }
   };
+
+  const loadPlan = async (tripId: string) => {
+    try {
+      const res = await axios.get<TripPlan>(`http://192.168.1.4:8080/api/trips/${tripId}/plan`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBudgetData(res.data.budget ?? []);
+      setScheduleData(res.data.schedule ?? []);
+    } catch (err: any) { console.log('❌', err.response?.data || err.message); }
+  };
+
+  const saveTripEdit = async () => {
+    if (!editedTrip || !token) return;
+    try {
+      await axios.put(`http://192.168.1.4:8080/api/trips/${editedTrip.id}`, editedTrip, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Alert.alert('✅', 'Đã lưu chỉnh sửa chuyến đi');
+      setTripDetail(editedTrip);
+      setIsEditingTrip(false);
+    } catch (err: any) { console.log('❌', err.response?.data || err.message); }
+  };
+
+  useEffect(() => { fetchTrips(); }, [token]);
+  useFocusEffect(React.useCallback(() => { fetchTrips(); }, [token]));
+
+  const tripsFiltered = trips.filter(trip => trip.status === convertTabToStatus(tabDangChon));
 
   useEffect(() => {
-    const fetchPlan = async () => {
-      if (!selectedTripId || !token) return;
-
-      setLoading(true);
-
-      try {
-        const res = await axios.get<TripPlan>(`http://192.168.1.9:8080/api/trips/${selectedTripId}/plan`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setBudgetData(res.data.budget ?? []);
-        setScheduleData(res.data.schedule ?? []);
-        setIsEdited(false);
-        await fetchTripDetail(selectedTripId);
-      } catch (err: any) {
-        console.log('❌ Lỗi lấy plan:', err.response?.status, err.response?.data || err.message);
-        Alert.alert('❌', 'Không thể tải dữ liệu plan');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlan();
+    if (selectedTripId && token) {
+      fetchTripDetail(selectedTripId);
+      loadPlan(selectedTripId);
+    } else {
+      setTripDetail(null);
+      setBudgetData([]);
+      setScheduleData([]);
+    }
   }, [selectedTripId, token]);
 
-  const savePlan = async () => {
-    if (!selectedTripId || !token) return;
-
-    try {
-      await axios.put(
-        `http://192.168.1.9:8080/api/trips/${selectedTripId}/plan`,
-        { budget: budgetData, schedule: scheduleData },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Alert.alert('✅', 'Đã lưu thành công');
-      setIsEdited(false);
-    } catch (err: any) {
-      console.log('❌ Lỗi lưu plan:', err.response?.status, err.response?.data || err.message);
-      Alert.alert('❌', 'Không thể lưu');
-    }
-  };
-
-  const tripsFiltered = trips.filter(trip =>
-    trip.status === convertTabToStatus(tabDangChon)
-  );
-
-  if (loading) {
-    return <ActivityIndicator style={{ flex: 1 }} size="large" color="#007AFF" />;
-  }
+  if (loading) return <SafeAreaView style={styles.container}><ActivityIndicator size="large" color="#007AFF" /></SafeAreaView>;
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* Tabs */}
         <View style={styles.tabs}>
           {tabOptions.map(tab => (
             <TouchableOpacity key={tab} onPress={() => setTabDangChon(tab)}>
@@ -209,98 +175,139 @@ export default function TripScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>📝 Danh sách chuyến đi</Text>
-        {tripsFiltered.length === 0 ? (
-          <Text style={styles.noDataText}>Không có chuyến đi</Text>
-        ) : (
-          tripsFiltered.map(trip => (
-            <TouchableOpacity
-              key={trip.id}
-              style={[
-                styles.tripButton,
-                selectedTripId === trip.id && styles.tripButtonSelected,
-              ]}
-              onPress={() => setSelectedTripId(trip.id)}
-            >
-              <Text style={[
-                styles.tripButtonText,
-                selectedTripId === trip.id && { color: '#fff' },
-              ]}>{trip.tripName}</Text>
-            </TouchableOpacity>
-          ))
-        )}
+        {tripsFiltered.map(trip => (
+          <TouchableOpacity
+            key={trip.id}
+            style={[styles.tripButton, selectedTripId === trip.id && styles.tripButtonSelected]}
+            onPress={() => setSelectedTripId(trip.id)}
+          >
+            <Text style={styles.tripButtonText}>{trip.tripName}</Text>
+          </TouchableOpacity>
+        ))}
 
-        {tripDetail && (
+        {/* Chi tiết chuyến đi chỉ hiện nếu KHÔNG phải tab Nháp */}
+        {tripDetail && tabDangChon !== 'Nháp' && (
           <>
-            <Text style={styles.sectionTitle}>🗺️ Chi tiết chuyến đi</Text>
-            <Text>Tên: {tripDetail.tripName}</Text>
-            <Text>Bắt đầu: {tripDetail.startDate}</Text>
-            <Text>Kết thúc: {tripDetail.endDate}</Text>
-            <Text>Địa chỉ đón: {tripDetail.pickupAddress}</Text>
-            <Text>Địa chỉ trả: {tripDetail.returnAddress}</Text>
-            <Text>Trạng thái: {tripDetail.status}</Text>
-
-            <Text style={styles.sectionTitle}>📍 Danh sách địa điểm</Text>
-            {tripDetail.places.length === 0 ? (
-              <Text style={styles.noDataText}>Không có địa điểm</Text>
-            ) : (
-              tripDetail.places.map(place => (
-                <View key={place.placeId} style={styles.card}>
-                  <Text style={styles.bold}>{place.name}</Text>
-                  <Text>Địa chỉ: {place.address}</Text>
-                  <Text>Giờ: {place.startTime} - {place.endTime}</Text>
-                  <Text>Note: {place.note}</Text>
-                </View>
-              ))
-            )}
-
-            <Text style={styles.sectionTitle}>💰 Dự trù kinh phí</Text>
-            {budgetData.length === 0 ? (
-              <Text style={styles.noDataText}>Không có dự trù kinh phí</Text>
-            ) : (
-              budgetData.map(item => (
-                <View key={`${item.category}-${item.name}`} style={styles.card}>
-                  <Text style={styles.bold}>{item.category}</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={item.name}
-                    onChangeText={(text) => {
-                      const newData = budgetData.map(b => b === item ? { ...b, name: text } : b);
-                      setBudgetData(newData);
-                      setIsEdited(true);
-                    }}
-                  />
-                  <Text>SL: {item.quantity} | ƯT: {item.estimate} | Tổng: {item.total}</Text>
-                  <Text>Note: {item.note}</Text>
-                </View>
-              ))
-            )}
-
-            <Text style={styles.sectionTitle}>📅 Lịch trình</Text>
-            {scheduleData.length === 0 ? (
-              <Text style={styles.noDataText}>Không có lịch trình</Text>
-            ) : (
-              scheduleData.map(item => (
-                <View key={`${item.time}-${item.location}`} style={styles.card}>
-                  <Text style={styles.bold}>{item.time} - {item.location}</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={item.activity}
-                    onChangeText={(text) => {
-                      const newData = scheduleData.map(s => s === item ? { ...s, activity: text } : s);
-                      setScheduleData(newData);
-                      setIsEdited(true);
-                    }}
-                  />
-                  <Text>Note: {item.note}</Text>
-                </View>
-              ))
-            )}
-
-            {isEdited && (
-              <TouchableOpacity style={styles.btn} onPress={savePlan}>
-                <Text style={styles.btnText}>💾 Lưu kế hoạch</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.sectionTitle}>🗺️ Chi tiết chuyến đi</Text>
+              <TouchableOpacity onPress={() => { if (isEditingTrip) saveTripEdit(); else setIsEditingTrip(true); }}>
+                <Text style={{ color: '#007AFF', fontWeight: '500' }}>
+                  {isEditingTrip ? 'Lưu' : 'Chỉnh sửa'}
+                </Text>
               </TouchableOpacity>
+            </View>
+
+            {isEditingTrip ? (
+              <>
+                <TextInput style={styles.input} value={editedTrip?.tripName} onChangeText={text => setEditedTrip(prev => prev ? { ...prev, tripName: text } : prev)} placeholder="Tên chuyến đi" />
+                <TextInput style={styles.input} value={editedTrip?.startDate} onChangeText={text => setEditedTrip(prev => prev ? { ...prev, startDate: text } : prev)} placeholder="Ngày bắt đầu" />
+                <TextInput style={styles.input} value={editedTrip?.endDate} onChangeText={text => setEditedTrip(prev => prev ? { ...prev, endDate: text } : prev)} placeholder="Ngày kết thúc" />
+                <TextInput style={styles.input} value={editedTrip?.pickupAddress} onChangeText={text => setEditedTrip(prev => prev ? { ...prev, pickupAddress: text } : prev)} placeholder="Địa chỉ đón" />
+                <TextInput style={styles.input} value={editedTrip?.returnAddress} onChangeText={text => setEditedTrip(prev => prev ? { ...prev, returnAddress: text } : prev)} placeholder="Địa chỉ trả" />
+                <TextInput style={styles.input} value={editedTrip?.status} onChangeText={text => setEditedTrip(prev => prev ? { ...prev, status: text } : prev)} placeholder="Trạng thái" />
+              </>
+            ) : (
+              <>
+                <Text>Tên: {tripDetail.tripName}</Text>
+                <Text>Bắt đầu: {tripDetail.startDate}</Text>
+                <Text>Kết thúc: {tripDetail.endDate}</Text>
+                <Text>Địa chỉ đón: {tripDetail.pickupAddress}</Text>
+                <Text>Địa chỉ trả: {tripDetail.returnAddress}</Text>
+                <Text>Trạng thái: {tripDetail.status}</Text>
+              </>
             )}
+
+            {/* Danh sách địa điểm */}
+            <Text style={styles.sectionTitle}>📍 Danh sách địa điểm</Text>
+            {tripDetail.places.map((place, index) => (
+              <View key={place.placeId} style={styles.card}>
+                {editingPlaceId === place.placeId ? (
+                  <>
+                    <TextInput style={styles.input} value={place.name} placeholder="Tên địa điểm" onChangeText={(text) => {
+                      const newPlaces = [...tripDetail.places]; newPlaces[index].name = text;
+                      setTripDetail({ ...tripDetail, places: newPlaces });
+                    }} />
+                    <TextInput style={styles.input} value={place.address} placeholder="Địa chỉ" onChangeText={(text) => {
+                      const newPlaces = [...tripDetail.places]; newPlaces[index].address = text;
+                      setTripDetail({ ...tripDetail, places: newPlaces });
+                    }} />
+                    <TextInput style={styles.input} value={place.startTime} placeholder="Giờ bắt đầu" onChangeText={(text) => {
+                      const newPlaces = [...tripDetail.places]; newPlaces[index].startTime = text;
+                      setTripDetail({ ...tripDetail, places: newPlaces });
+                    }} />
+                    <TextInput style={styles.input} value={place.endTime} placeholder="Giờ kết thúc" onChangeText={(text) => {
+                      const newPlaces = [...tripDetail.places]; newPlaces[index].endTime = text;
+                      setTripDetail({ ...tripDetail, places: newPlaces });
+                    }} />
+                    <TextInput style={styles.input} value={place.note} placeholder="Ghi chú" onChangeText={(text) => {
+                      const newPlaces = [...tripDetail.places]; newPlaces[index].note = text;
+                      setTripDetail({ ...tripDetail, places: newPlaces });
+                    }} />
+                    <TouchableOpacity onPress={() => setEditingPlaceId(null)}>
+                      <Text style={{ color: '#007AFF', fontWeight: '500' }}>Lưu</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <Text>{place.name}</Text>
+                    <Text>{place.address}</Text>
+                    <Text>{place.startTime} - {place.endTime}</Text>
+                    <Text>Note: {place.note}</Text>
+                    <TouchableOpacity onPress={() => setEditingPlaceId(place.placeId)}>
+                      <Text style={{ color: '#007AFF', fontWeight: '500' }}>Chỉnh sửa</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            ))}
+
+            {/* Dự trù kinh phí */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.sectionTitle}>💰 Dự trù kinh phí</Text>
+              <TouchableOpacity onPress={() => setIsEditingBudget(!isEditingBudget)}>
+                <Text style={{ color: '#007AFF', fontWeight: '500' }}>
+                  {isEditingBudget ? 'Lưu' : 'Chỉnh sửa'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {budgetData.map((item, idx) => (
+              <View key={`${item.category}-${item.name}`} style={styles.card}>
+                {isEditingBudget ? (
+                  <>
+                    <TextInput style={styles.input} value={item.category} placeholder="Category" onChangeText={(text) => {
+                      const newData = [...budgetData]; newData[idx].category = text;
+                      setBudgetData(newData);
+                    }} />
+                    <TextInput style={styles.input} value={item.name} placeholder="Tên" onChangeText={(text) => {
+                      const newData = [...budgetData]; newData[idx].name = text;
+                      setBudgetData(newData);
+                    }} />
+                    <TextInput style={styles.input} value={item.quantity} placeholder="Số lượng" onChangeText={(text) => {
+                      const newData = [...budgetData]; newData[idx].quantity = text;
+                      setBudgetData(newData);
+                    }} />
+                    <TextInput style={styles.input} value={item.estimate} placeholder="Ước tính" onChangeText={(text) => {
+                      const newData = [...budgetData]; newData[idx].estimate = text;
+                      setBudgetData(newData);
+                    }} />
+                    <TextInput style={styles.input} value={item.total} placeholder="Tổng" onChangeText={(text) => {
+                      const newData = [...budgetData]; newData[idx].total = text;
+                      setBudgetData(newData);
+                    }} />
+                    <TextInput style={styles.input} value={item.note} placeholder="Ghi chú" onChangeText={(text) => {
+                      const newData = [...budgetData]; newData[idx].note = text;
+                      setBudgetData(newData);
+                    }} />
+                  </>
+                ) : (
+                  <>
+                    <Text>{item.category}: {item.name}, SL: {item.quantity}, ƯT: {item.estimate}, Tổng: {item.total}</Text>
+                    <Text>Note: {item.note}</Text>
+                  </>
+                )}
+              </View>
+            ))}
           </>
         )}
       </ScrollView>
@@ -314,19 +321,9 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 16, color: '#888' },
   tabActive: { color: '#007AFF', fontWeight: 'bold', textDecorationLine: 'underline' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 10 },
-  noDataText: { fontSize: 16, color: '#999', textAlign: 'center', marginVertical: 10 },
   tripButton: { padding: 10, borderWidth: 1, borderColor: '#ccc', borderRadius: 6, marginBottom: 6 },
   tripButtonSelected: { backgroundColor: '#007AFF' },
   tripButtonText: { color: '#000', fontWeight: '500' },
-  card: { backgroundColor: '#f9f9f9', padding: 12, marginBottom: 8, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
-  bold: { fontWeight: 'bold', marginBottom: 4 },
-  input: { backgroundColor: '#fff', padding: 8, borderRadius: 4, borderColor: '#ccc', borderWidth: 1, marginTop: 4 },
-  btn: {
-    backgroundColor: '#34C759',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  card: { backgroundColor: '#f9f9f9', padding: 12, marginBottom: 8, borderRadius: 8 },
+  input: { backgroundColor: '#fff', padding: 8, borderRadius: 4, borderWidth: 1, borderColor: '#ccc', marginVertical: 4 },
 });
